@@ -2,8 +2,8 @@ from config import db, api
 from flask_restplus import Resource, reqparse
 from models.user_model import User
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_jwt_extended import create_access_token, create_refresh_token
-
+from flask_jwt_extended import create_access_token, create_refresh_token, get_jwt_identity
+# from functools import warps
 
 login_parser = reqparse.RequestParser()
 login_parser.add_argument('username')
@@ -35,8 +35,8 @@ class Login(Resource):
             return {'message': 'no user found'}
 
         if check_password_hash(user.password, password):
-            access_token = create_access_token(identity=username)
-            refresh_token = create_refresh_token(identity=username)
+            access_token = create_access_token(identity={"username":user.username,'is_admin':user.is_admin,'email':user.email})
+            refresh_token = create_refresh_token(identity={"username":user.username,'is_admin':user.is_admin,'email':user.email})
             return {
                 'message': 'successful login',
                 'access_token': access_token,
@@ -72,8 +72,8 @@ class Register(Resource):
         db.session.add(user)
         db.session.commit()
 
-        access_token = create_access_token(identity=username)
-        refresh_token = create_refresh_token(identity=username)
+        access_token = create_access_token(identity={"username":user.username,'is_admin':user.is_admin,'email':user.email})
+        refresh_token = create_refresh_token(identity={"username":user.username,'is_admin':user.is_admin,'email':user.email})
 
         return {
             'message': 'Registration successful',
