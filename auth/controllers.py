@@ -1,25 +1,14 @@
 from config import db, api
-from flask_restplus import Resource, reqparse
-from models.user_model import User
+from flask_restplus import Resource
+from user.models import User
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_jwt_extended import create_access_token, create_refresh_token, get_jwt_identity
-# from functools import warps
-
-login_parser = reqparse.RequestParser()
-login_parser.add_argument('username')
-login_parser.add_argument('email')
-login_parser.add_argument('password', required=True)
-
-register_parser = reqparse.RequestParser()
-register_parser.add_argument('username', required=True)
-register_parser.add_argument('email', required=True)
-register_parser.add_argument('password1', required=True)
-register_parser.add_argument('password2', required=True)
-
+from .parsers import login_parser, registeration_parser
 
 class Login(Resource):
     @api.expect(login_parser)
     def post(self):
+        """login view"""
         args = login_parser.parse_args()
 
         username = args['username']
@@ -45,11 +34,11 @@ class Login(Resource):
         else:
             return {'message': 'wrong password'}
 
-
 class Register(Resource):
-    @api.expect(register_parser)
+    @api.expect(registeration_parser)
     def post(self):
-        args = register_parser.parse_args()
+        """registeration view"""
+        args = registeration_parser.parse_args()
 
         username = args['username']
         email=args['email']
@@ -58,10 +47,10 @@ class Register(Resource):
         hashed_password = generate_password_hash(password1)
 
         if not username and not email or not password1 or not password2:
-            return {'message': 'Complete the fields'}
+            return {'message': 'Compelete the fields'}
 
         if password2 != password1:
-            return {'message': 'Both password fileds should be the same'}
+            return {'message': 'Both password fileds must be the same'}
 
         check_user = User.query.filter(db.or_(User.username==username, User.email==email)).first()
         if check_user is not None:

@@ -1,7 +1,7 @@
 from flask import Flask
 from config import db, api, jwt
-from resources.user_api import UserView, UserListView
-from resources.auth_api import Login, Register
+from user.controllers import UserView, UserListView
+from auth.controllers import Login, Register
 app = Flask(__name__)
 
 #initing app
@@ -9,6 +9,7 @@ app.config.from_pyfile('config.cfg')
 db.init_app(app)
 api.init_app(app)
 jwt.init_app(app)
+jwt._set_error_handler_callbacks(api)
 
 #creating new database tables
 with app.app_context():
