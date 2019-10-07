@@ -4,3 +4,4 @@ Flask-SQLAlchemy>=2.4.1
 mysqlclient>=1.4.4
 PyMySQL>=0.9.3
 Flask-JWT-Extended>=3.23.0
+itsdangerous
