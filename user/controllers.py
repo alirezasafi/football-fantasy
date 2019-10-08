@@ -3,19 +3,9 @@ from .models import User
 from werkzeug.security import generate_password_hash, check_password_hash
 from config import db, api
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from functools import wraps
+from .permissions import admin_required
 
 
-
-# decorator to check if the user is admin or not
-def admin_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        is_admin = get_jwt_identity()['is_admin']
-        if not is_admin:
-            return {'message': 'Only admin is privilaged.'}
-        return f(*args, **kwargs)
-    return decorated_function
 
 
 class UserView(Resource):
