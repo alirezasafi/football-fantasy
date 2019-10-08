@@ -25,6 +25,25 @@ def confirm_registeration_token(token):
         return False
     return email
 
+def generate_reset_password_token(email):
+    serializer = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
+
+    return serializer.dumps(
+        email,
+        salt=current_app.config('RESET_PASSWORD_SALT')
+    )
+
+def confirm_reset_password_token(token):
+    serializer = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
+    try:
+        email = serializer.loads(
+            token,
+            salt=current_app.config['RESET_PASSWORD_SALT'],
+            max_age=current_app.config['RESET_PASSWORD_EXPIRATION']
+        )
+    except:
+        return False
+    return email
 
 def send_email(to, subject, template):
     msg = Message(
