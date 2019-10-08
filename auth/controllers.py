@@ -2,9 +2,9 @@ from config import db, api
 from flask_restplus import Resource
 from user.models import User
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_jwt_extended import create_access_token, create_refresh_token, get_jwt_identity
-from .parsers import login_parser, registeration_parser
-from .emailToken import confirm_registeration_token, generate_confirmation_token, send_email
+from flask_jwt_extended import create_access_token, create_refresh_token, get_jwt_identity, jwt_required
+from .parsers import login_parser, registeration_parser, reset_password_parser
+from .emailToken import confirm_registeration_token, generate_confirmation_token, send_email, generate_reset_password_token, confirm_reset_password_token
 from flask import render_template, url_for
 import smtplib
 
@@ -19,19 +19,31 @@ class Login(Resource):
         password = args['password']
 
         if not username and not email or not password:
-            return {'message': 'missing credentials'}
+            return {'message': 'Missing credentials.'}
 
         user = User.query.filter(
             db.or_(User.email == email, User.username == username)).first()
 
         if not user:
-            return {'message': 'no user found'}
+            return {'message': 'No user found!'}
 
         if check_password_hash(user.password, password):
             access_token = create_access_token(
-                identity={"username": user.username, 'is_admin': user.is_admin, 'email': user.email})
+                identity={
+                    "username": user.username,
+                    'is_admin': user.is_admin,
+                    'email': user.email,
+                    'is_confirmed':user.is_confirmed
+                }
+            )
             refresh_token = create_refresh_token(
-                identity={"username": user.username, 'is_admin': user.is_admin, 'email': user.email})
+                identity={
+                    "username": user.username,
+                    'is_admin': user.is_admin,
+                    'email': user.email,
+                    'is_confirmed':user.is_confirmed
+                }
+            )
             return {
                 'message': 'successful login',
                 'access_token': access_token,
@@ -42,6 +54,23 @@ class Login(Resource):
 
 
 class Register(Resource):
+    
+    @jwt_required
+    def get(self):
+        """Reset password view"""
+        #extracting info
+        email = get_jwt_identity()['email']
+        #creating and sending email
+        token = generate_reset_password_token(email)
+        reset_url = url_for('reset_password',
+                              token=token, _external=True)
+        html = render_template('reset_password.html', reset_url = reset_url)
+        send_email(email, "SE project Reset password",html)
+        try:
+            send_email(email, "SE project Reset password",html)
+        except smtplib.SMTPRecipientsRefused:
+            return {'message': 'unable to send email to {}'.format(email)}
+
     @api.expect(registeration_parser)
     def post(self):
         """registeration view"""
@@ -68,26 +97,28 @@ class Register(Resource):
             username=username,
             email=email,
             password=hashed_password,
-            is_confirmed = False,
-            is_admin = False
+            is_confirmed=False,
+            is_admin=False
         )
 
-
-        #generating token
+        # generating token
         access_token = create_access_token(
             identity={"username": user.username, 'is_admin': user.is_admin, 'email': user.email})
         refresh_token = create_refresh_token(
             identity={"username": user.username, 'is_admin': user.is_admin, 'email': user.email})
-        
-        #sending email
+
+        # sending email
         token = generate_confirmation_token(user.email)
-        confirm_url = url_for('confirm_registeration_email', token=token, _external=True)
+        confirm_url = url_for('confirm_registeration_email',
+                              token=token, _external=True)
         html = render_template('actvate_email.html', confirm_url=confirm_url)
         try:
-            send_email(user.email, "SE project : Registeration confirmation email", html)
+            send_email(
+                user.email, "SE project : Registeration confirmation email", html)
         except smtplib.SMTPRecipientsRefused:
-            return {'message':'unable to send email to {}'.format(user.email)}
+            return {'message': 'unable to send email to {}'.format(user.email)}
 
+        #applying changes to database
         db.session.add(user)
         db.session.commit()
 
@@ -100,17 +131,55 @@ class Register(Resource):
 
 class RegisterConfirmation(Resource):
     def get(self, token):
+        """Account actication view"""
         try:
             email = confirm_registeration_token(token)
         except:
-            return {'message':'Invalid link or expiered link.'}
-        
+            return {'message': 'Invalid link or expiered link.'}
+
         user = User.query.filter_by(email=email).first_or_404()
 
         if user.is_confirmed:
-            return {'message':'Already confirmed; please login.'}
+            return {'message': 'Already confirmed; please login.'}
         else:
             user.is_confirmed = True
             db.session.add(user)
             db.session.commit()
-            return {'message':'Account confirmed successfully'}
+            return {'message': 'Account confirmed successfully'}
+
+
+class ResetPasswordConfirmation(Resource):
+    @jwt_required
+    @api.expect(reset_password_parser)
+    def post(self,token):
+        """Account reset password view"""
+        try:
+            email = confirm_registeration_token(token)
+        except:
+            return {'message': 'Invalid link or expiered link.'}
+
+        args = reset_password_parser.parse_args()
+
+        old_password1 = args['old_password1']
+        old_password2 = args['old_password2']
+        new_password = args['new_password']
+
+        message = None
+
+        if not old_password1 or not old_password2 or not new_password:
+            message = "Complete the fields."
+
+        if old_password1 != old_password2:
+            message = "Old passwords should match."
+
+        user = User.query.filter_by(email=email).first_or_404()
+
+        if check_password_hash(user.password, old_password1):
+            user.password = generate_password_hash(new_password)
+            db.session.add(user)
+            db.session.commit()
+            message = "New password has been set."
+        else:
+            message = "Password is wrong."
+        
+        return {'message':message}
