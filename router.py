@@ -1,7 +1,7 @@
 from flask import Flask
 from config import db, api, jwt, mail
 from user.controllers import UserView, UserListView
-from auth.controllers import Login, Register, RegisterConfirmation
+from auth.controllers import Login, Register, RegisterConfirmation, ResetPasswordConfirmation
 app = Flask(__name__)
 
 #initing app
@@ -24,7 +24,8 @@ api.add_resource(UserListView, '/user')
 #routing authentication
 api.add_resource(Login,'/login')
 api.add_resource(Register, '/registeration')
-api.add_resource(RegisterConfirmation,'/registeration/<token>', endpoint = 'confirm_registeration_email')
+api.add_resource(RegisterConfirmation,'/registeration/activate/<token>', endpoint = 'confirm_registeration')
+api.add_resource(ResetPasswordConfirmation, 'registeration/reset-password/<token>', endpoint = 'reset_password')
 
 if __name__ == '__main__':
     app.run(debug=True)
