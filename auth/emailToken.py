@@ -30,7 +30,7 @@ def generate_reset_password_token(email):
 
     return serializer.dumps(
         email,
-        salt=current_app.config('RESET_PASSWORD_SALT')
+        salt=current_app.config['RESET_PASSWORD_SALT']
     )
 
 def confirm_reset_password_token(token):
