@@ -54,22 +54,6 @@ class Login(Resource):
 
 
 class Register(Resource):
-    
-    @jwt_required
-    def get(self):
-        """Reset password view"""
-        #extracting info
-        email = get_jwt_identity()['email']
-        #creating and sending email
-        token = generate_reset_password_token(email)
-        reset_url = url_for('reset_password',
-                              token=token, _external=True)
-        html = render_template('reset_password.html', reset_url = reset_url)
-        send_email(email, "SE project Reset password",html)
-        try:
-            send_email(email, "SE project Reset password",html)
-        except smtplib.SMTPRecipientsRefused:
-            return {'message': 'unable to send email to {}'.format(email)}
 
     @api.expect(registeration_parser)
     def post(self):
@@ -152,7 +136,7 @@ class ResetPasswordConfirmation(Resource):
     @jwt_required
     @api.expect(reset_password_parser)
     def post(self,token):
-        """Account reset password view"""
+        """Account reset password view; token required"""
         try:
             email = confirm_registeration_token(token)
         except:
@@ -160,22 +144,22 @@ class ResetPasswordConfirmation(Resource):
 
         args = reset_password_parser.parse_args()
 
-        old_password1 = args['old_password1']
-        old_password2 = args['old_password2']
-        new_password = args['new_password']
+        old_password = args['old_password']
+        new_password1 = args['new_password1']
+        new_password2 = args['new_password2']
 
         message = None
 
-        if not old_password1 or not old_password2 or not new_password:
+        if not old_password or not new_password1 or not new_password2:
             message = "Complete the fields."
 
-        if old_password1 != old_password2:
+        if new_password2 != new_password1:
             message = "Old passwords should match."
 
         user = User.query.filter_by(email=email).first_or_404()
 
-        if check_password_hash(user.password, old_password1):
-            user.password = generate_password_hash(new_password)
+        if check_password_hash(user.password, old_password):
+            user.password = generate_password_hash(new_password2)
             db.session.add(user)
             db.session.commit()
             message = "New password has been set."
@@ -183,3 +167,21 @@ class ResetPasswordConfirmation(Resource):
             message = "Password is wrong."
         
         return {'message':message}
+
+class ResetPassword(Resource):
+    @jwt_required
+    def get(self):
+        """Reset password view; token required"""
+        #extracting info
+        email = get_jwt_identity()['email']
+        #creating and sending email
+        token = generate_reset_password_token(email)
+        reset_url = url_for('reset_password_confirmation',
+                              token=token, _external=True)
+        html = render_template('reset_password.html', reset_url = reset_url)
+        send_email(email, "SE project Reset password",html)
+        try:
+            send_email(email, "SE project Reset password",html)
+            return {'message':'Reset password email has been sent.'}
+        except smtplib.SMTPRecipientsRefused:
+            return {'message': 'unable to send email to {}'.format(email)}
