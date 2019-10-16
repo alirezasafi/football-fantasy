@@ -29,4 +29,4 @@ api.add_resource(ResetPassword, '/auth/reset-password', endpoint='reset_password
 api.add_resource(ResetPasswordConfirmation, '/auth/reset-password/<token>', endpoint = 'reset_password_confirmation')
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', debug=True)
+    app.run(debug=True)
