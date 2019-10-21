@@ -7,5 +7,8 @@ class User(db.Model):
     password = db.Column(db.String(200))
     is_admin = db.Column(db.Boolean)
     is_confirmed = db.Column(db.Boolean)
+    squad_name = db.Column(db.String(80), nullable=True)
+    squad = db.relationship('Squad', backref='user_lineup', lazy='dynamic')
+
     def __repr__(self):
         return '<User %r>' % self.username
