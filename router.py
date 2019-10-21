@@ -2,6 +2,9 @@ from flask import Flask
 from config import db, api, jwt, mail
 from user.controllers import UserView, UserListView
 from auth.controllers import Login, Register, RegisterConfirmation, ResetPasswordConfirmation, ResetPassword
+from team.controllers import PickSquad
+
+
 app = Flask(__name__)
 
 #initing app
@@ -27,6 +30,8 @@ api.add_resource(Register, '/auth/registeration')
 api.add_resource(RegisterConfirmation,'/auth/registeration/activate/<token>', endpoint = 'confirm_registeration_email')
 api.add_resource(ResetPassword, '/auth/reset-password', endpoint='reset_password')
 api.add_resource(ResetPasswordConfirmation, '/auth/reset-password/<token>', endpoint = 'reset_password_confirmation')
+# routing team app
+api.add_resource(PickSquad, '/pick-squad')
 
 if __name__ == '__main__':
     app.run(debug=True)
