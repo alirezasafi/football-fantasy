@@ -2,7 +2,7 @@ from flask_restplus import Resource
 from . import models, parsers
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from player.models import Player
-from flask import make_response, jsonify
+from flask import make_response, jsonify, request
 from config import api, db
 from user.models import User
 from auth.permissions import account_actication_required
@@ -15,12 +15,16 @@ class PickSquad(Resource):
         players = Player.query.all()
         players_response = []
         for player in players:
+            player_image = None
+            if player.image is not None:
+                player_image = request.host + '/media/player/' + player.image
+
             players_response.append(
                 {
                     "id": player.id,
                     "name": player.name,
                     "price": player.price,
-                    "image": player.image,
+                    "image": player_image,
                     "shirt_number": player.shirt_number,
                     "club": player.club,
                     "position": player.position.value,
