@@ -43,10 +43,13 @@ class PickSquad(Resource):
         if len(squad) == 0:
             if len(picks) == 15:
                 user_obj.squad_name = args['squad-name']
+                user_obj.captain = args['captain-id']
+                db.session.add(user_obj)
                 for player in picks:
                     squad_obj = models.Squad(
                         user_id=user_obj.id,
-                        player_id=player['player_id']
+                        player_id=player['player_id'],
+                        lineup=player['lineup']
                     )
                     db.session.add(squad_obj)
                 db.session.commit()

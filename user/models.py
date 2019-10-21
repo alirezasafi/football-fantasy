@@ -1,4 +1,6 @@
 from config import db
+from player.models import Player
+
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -9,6 +11,8 @@ class User(db.Model):
     is_confirmed = db.Column(db.Boolean)
     squad_name = db.Column(db.String(80), nullable=True)
     squad = db.relationship('Squad', backref='user_lineup', lazy='dynamic')
+    captain = db.Column(db.Integer, db.ForeignKey(Player.id))
+    overall_point = db.Column(db.Integer)
 
     def __repr__(self):
         return '<User %r>' % self.username
