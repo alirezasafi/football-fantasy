@@ -38,4 +38,4 @@ api.add_resource(PickSquad, '/pick-squad')
 # routing player app
 api.add_resource(MediaPlayer, '/media/player/<path:path>')
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', debug=True)
+    app.run(host="0.0.0.0", debug=True)
