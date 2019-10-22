@@ -2,7 +2,7 @@ from flask import Flask
 from config import db, api, jwt, mail
 from user.controllers import UserView, UserListView
 from auth.controllers import Login, Register, RegisterConfirmation, ResetPasswordConfirmation, ResetPassword
-from team.controllers import PickSquad
+from team.controllers import PickSquad, ManageTeam
 from player.controllers import MediaPlayer
 import os
 
@@ -35,6 +35,7 @@ api.add_resource(ResetPassword, '/auth/reset-password', endpoint='reset_password
 api.add_resource(ResetPasswordConfirmation, '/auth/reset-password/<token>', endpoint = 'reset_password_confirmation')
 # routing team app
 api.add_resource(PickSquad, '/pick-squad')
+api.add_resource(ManageTeam, '/my-team')
 # routing player app
 api.add_resource(MediaPlayer, '/media/player/<path:path>')
 if __name__ == '__main__':
