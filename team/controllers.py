@@ -1,5 +1,5 @@
 from flask_restplus import Resource
-from . import models, parsers
+from . import models, parsers, exceptions
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from player.models import Player
 from flask import make_response, jsonify, request
@@ -141,7 +141,7 @@ def validate_squad(squad):
         else:
             FD += 1
     if not (GP == 2 and DF == 5 and MF == 5 and FD == 3):
-        return False
+        raise exceptions.SquadException()
     GP = 0
     DF = 0
     MF = 0
@@ -161,11 +161,10 @@ def validate_squad(squad):
         elif player['position'] == 'Forward' and player['lineup']:
             FD += 1
             lineup += 1
-    print((DF,MF,FD))
     if (DF,MF,FD) in formations and GP == 1 and lineup == 11:
         return True
     else:
-        return False
+        raise exceptions.FormationException
 
 
 def serialize_player(squad, in_lineup):
