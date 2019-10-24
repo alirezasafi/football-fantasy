@@ -60,7 +60,7 @@ class Register(Resource):
     @auth_api.expect(registeration_model)
     def post(self):
         """registeration view"""
-        args = auth_api.payload()
+        args = auth_api.payload
 
         username = args['username']
         email = args['email']
@@ -144,7 +144,7 @@ class ResetPasswordConfirmation(Resource):
         except:
             return {'message': 'Invalid link or expiered link.'}
 
-        args = auth_api.payload()
+        args = auth_api.payload
 
         old_password = args['old_password']
         new_password1 = args['new_password1']

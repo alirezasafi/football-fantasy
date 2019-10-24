@@ -29,7 +29,7 @@ class PickSquad(Resource):
                     "shirt_number": player.shirt_number,
                     "club": player.club,
                     "position": player.position.value,
-                    "status": player.status
+                    "status": player.status.value
                 }
             )
         response = make_response(jsonify(players_response), 200)
@@ -40,21 +40,18 @@ class PickSquad(Resource):
     @account_actication_required
     def post(self):
         args = team_api.payload
-        email = get_jwt_identity()['email']
-        user_obj = User.query.filter_by(email=email).first()
         picks = args['picks']
-        squad = user_obj.squad.all()
 
-        if len(squad) == 0:
-            if len(picks) == 15:
-                if not validate_formation(picks):
-                    response = make_response(jsonify({"detail": "formation validate error"}), 400)
-                    return response
+        if validate_squad(picks):
+            email = get_jwt_identity()['email']
+            user_obj = User.query.filter_by(email=email).first()
+            user_squad = user_obj.squad.all()
+            if len(user_squad) == 0:
                 user_obj.squad_name = args['squad-name']
                 user_obj.captain = args['captain-id']
-
+                user_obj.budget = args['budget']
                 for player in picks:
-                    squad_obj = models.Squad(
+                    squad_obj = models.User_Player(
                         user_id=user_obj.id,
                         player_id=player['player_id'],
                         lineup=player['lineup']
@@ -63,25 +60,7 @@ class PickSquad(Resource):
                 db.session.commit()
                 response = make_response(jsonify({"detail": "your team was successfully registered"}), 201)
                 return response
-            else:
-                response = make_response(jsonify({"detail": "you should pick 15 player"}), 400)
-                return response
-        else:
-            response = make_response(jsonify({"detail": "your squad is complete"}), 400)
-            return response
 
-
-def validate_formation(squad):
-    lineup_len = 0
-    bench_len = 0
-    for player in squad:
-        if player['lineup']:
-            lineup_len += 1
-        else:
-            bench_len += 1
-    if lineup_len == 11 and bench_len == 4:
-        return True
-    return False
 
 @team_api.route('/my-team')
 class ManageTeam(Resource):
@@ -110,7 +89,7 @@ class ManageTeam(Resource):
         if validate_squad(new_user_squad):
             email = get_jwt_identity()['email']
             user_obj = User.query.filter_by(email=email).first()
-            user_squad = user_obj.squad.order_by(models.Squad.player_id).all()
+            user_squad = user_obj.squad.order_by(models.User_Player.player_id).all()
             for i in range(15):
                 if new_user_squad[i]['player_id'] == user_squad[i].player_id:
                     user_squad[i].lineup = new_user_squad[i]['lineup']
@@ -121,9 +100,6 @@ class ManageTeam(Resource):
             user_obj.captain = args['captain-id']
             db.session.commit()
             response = make_response(jsonify({"detail": "successfully upgraded"}), 200)
-            return response
-        else:
-            response = make_response(jsonify({"detail": "400 BAD REQUEST"}), 400)
             return response
 
 
