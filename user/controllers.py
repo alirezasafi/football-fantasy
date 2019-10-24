@@ -1,13 +1,13 @@
 from flask_restplus import Resource, reqparse
 from .models import User
 from werkzeug.security import generate_password_hash, check_password_hash
-from config import db, api
+from config import db
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from .permissions import admin_required
 
+from .api_model import user_api
 
-
-
+@user_api.route('/user/<int:user_id>')
 class UserView(Resource):
     @jwt_required
     @admin_required
@@ -37,7 +37,7 @@ class UserView(Resource):
         else:
             return {'message': 'Specify the user.'}
 
-
+@user_api.route('/user')
 class UserListView(Resource):
     @jwt_required
     @admin_required
