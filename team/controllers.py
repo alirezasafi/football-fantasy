@@ -1,13 +1,14 @@
 from flask_restplus import Resource
-from . import models, parsers, exceptions
+from . import models, exceptions
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from player.models import Player
 from flask import make_response, jsonify, request
-from config import api, db
+from config import db
 from user.models import User
 from auth.permissions import account_actication_required
+from .api_model import pick_squad_model, team_api, manage_team_model
 
-
+@team_api.route('/pick-squad')
 class PickSquad(Resource):
     @jwt_required
     @account_actication_required
@@ -34,11 +35,11 @@ class PickSquad(Resource):
         response = make_response(jsonify(players_response), 200)
         return response
 
-    @api.expect(parsers.PickSquad_parser)
+    @team_api.expect(pick_squad_model)
     @jwt_required
     @account_actication_required
     def post(self):
-        args = parsers.PickSquad_parser.parse_args()
+        args = team_api.payload
         email = get_jwt_identity()['email']
         user_obj = User.query.filter_by(email=email).first()
         picks = args['picks']
@@ -82,7 +83,7 @@ def validate_formation(squad):
         return True
     return False
 
-
+@team_api.route('/my-team')
 class ManageTeam(Resource):
     @jwt_required
     @account_actication_required
@@ -100,11 +101,11 @@ class ManageTeam(Resource):
         response = make_response(jsonify({"detail": "first pick your team!!"}), 400)
         return response
 
-    @api.expect(parsers.ManageTeam_parser)
+    @team_api.expect(manage_team_model)
     @jwt_required
     @account_actication_required
     def put(self):
-        args = parsers.ManageTeam_parser.parse_args()
+        args = team_api.payload
         new_user_squad = sorted(args['squad'], key=lambda k: k['player_id'])
         if validate_squad(new_user_squad):
             email = get_jwt_identity()['email']
