@@ -4,9 +4,8 @@ from flask_restplus import Resource
 from user.models import User
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_jwt_extended import create_access_token, create_refresh_token, get_jwt_identity, jwt_required
-from .parsers import login_parser, registeration_parser, reset_password_parser
 from .emailToken import confirm_registeration_token, generate_confirmation_token, send_email, generate_reset_password_token, confirm_reset_password_token
-from flask import render_template, url_for
+from flask import render_template, url_for, request
 import smtplib
 
 @auth_api.route('/login')
@@ -15,7 +14,7 @@ class Login(Resource):
     @auth_api.expect(login_model)
     def post(self):
         """login view"""
-        args = login_parser.parse_args()
+        args = auth_api.payload
 
         username = args['username']
         email = args['email']
@@ -61,7 +60,7 @@ class Register(Resource):
     @auth_api.expect(registeration_model)
     def post(self):
         """registeration view"""
-        args = registeration_parser.parse_args()
+        args = auth_api.payload()
 
         username = args['username']
         email = args['email']
@@ -145,7 +144,7 @@ class ResetPasswordConfirmation(Resource):
         except:
             return {'message': 'Invalid link or expiered link.'}
 
-        args = reset_password_parser.parse_args()
+        args = auth_api.payload()
 
         old_password = args['old_password']
         new_password1 = args['new_password1']
