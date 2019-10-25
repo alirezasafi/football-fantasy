@@ -3,6 +3,7 @@ from config import db, api, jwt, mail
 from user.controllers import UserView, UserListView
 from auth.controllers import Login, Register, RegisterConfirmation, ResetPasswordConfirmation, ResetPassword
 from flask_cors import CORS
+# from flask.ext.cors import CORS
 #importing apis
 from auth.api_model import auth_api
 from player.api_model import player_api
@@ -13,10 +14,18 @@ from team.controllers import PickSquad, ManageTeam
 from player.controllers import MediaPlayer
 import os
 
-
+import logging
 app = Flask(__name__)
 
+@app.after_request
+def after_request(response):
+  response.headers.add('Access-Control-Allow-Origin', '*')
+  response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+  response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE')
+  return response
 
+
+logging.getLogger('flask_cors').level = logging.DEBUG
 #initing api
 api.init_app(app)
 api.add_namespace(auth_api, path='/auth')
