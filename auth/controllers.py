@@ -16,9 +16,9 @@ class Login(Resource):
         """login view"""
         args = auth_api.payload
 
-        username = args['username']
-        email = args['email']
-        password = args['password']
+        username = args.get('username')
+        email = args.get('email')
+        password = args.get('password')
 
         if not username and not email or not password:
             return {'message': 'Missing credentials.'}
@@ -62,10 +62,10 @@ class Register(Resource):
         """registeration view"""
         args = auth_api.payload
 
-        username = args['username']
-        email = args['email']
-        password1 = args['password1']
-        password2 = args['password2']
+        username = args.get('username')
+        email = args.get('email')
+        password1 = args.get('password1')
+        password2 = args.get('password2')
         hashed_password = generate_password_hash(password1)
 
         if not username and not email or not password1 or not password2:
@@ -146,9 +146,9 @@ class ResetPasswordConfirmation(Resource):
 
         args = auth_api.payload
 
-        old_password = args['old_password']
-        new_password1 = args['new_password1']
-        new_password2 = args['new_password2']
+        old_password = args.get('old_password')
+        new_password1 = args.get('new_password1')
+        new_password2 = args.get('new_password2')
 
         message = None
 

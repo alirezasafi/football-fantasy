@@ -40,16 +40,16 @@ class PickSquad(Resource):
     @account_actication_required
     def post(self):
         args = team_api.payload
-        picks = args['picks']
+        picks = args.get('picks')
 
         if validate_squad(picks):
             email = get_jwt_identity()['email']
             user_obj = User.query.filter_by(email=email).first()
             user_squad = user_obj.squad.all()
             if len(user_squad) == 0:
-                user_obj.squad_name = args['squad-name']
-                user_obj.captain = args['captain-id']
-                user_obj.budget = args['budget']
+                user_obj.squad_name = args.get('squad-name')
+                user_obj.captain = args.get('captain-id')
+                user_obj.budget = args.get('budget')
                 for player in picks:
                     squad_obj = models.User_Player(
                         user_id=user_obj.id,
@@ -85,7 +85,7 @@ class ManageTeam(Resource):
     @account_actication_required
     def put(self):
         args = team_api.payload
-        new_user_squad = sorted(args['squad'], key=lambda k: k['player_id'])
+        new_user_squad = sorted(args.get('squad'), key=lambda k: k['player_id'])
         if validate_squad(new_user_squad):
             email = get_jwt_identity()['email']
             user_obj = User.query.filter_by(email=email).first()
@@ -97,7 +97,7 @@ class ManageTeam(Resource):
                     response = make_response(jsonify({"detail": "400 BAD REQUEST"}), 400)
                     return response
 
-            user_obj.captain = args['captain-id']
+            user_obj.captain = args.get('captain-id')
             db.session.commit()
             response = make_response(jsonify({"detail": "successfully upgraded"}), 200)
             return response
