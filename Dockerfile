@@ -8,12 +8,11 @@ WORKDIR /app
 
 # RUN pip install -r requirements.txt
 
-RUN apk add --no-cache mariadb-connector-c-dev ;\
-    apk add --no-cache --virtual .build-deps \
+RUN apk add mariadb-connector-c-dev ;\
+    apk add --virtual .build-deps \
         build-base \
         mariadb-dev ;\
     pip install -qq -r requirements.txt; \
-    apk del .build-deps 
 ENTRYPOINT ["python"]
 
 CMD ["router.py"]
