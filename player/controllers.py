@@ -4,8 +4,9 @@ from . import (
 from flask import send_file, current_app, make_response, jsonify
 from flask_restplus import Resource
 from config import db
+from .api_model import player_api
 
-
+@player_api.route('/media/player/<path:path>')
 class MediaPlayer(Resource):
     def get(self, path):
         if path.endswith('.jpg'):
