@@ -2,6 +2,7 @@ from flask import Flask
 from config import db, api, jwt, mail
 from user.controllers import UserView, UserListView
 from auth.controllers import Login, Register, RegisterConfirmation, ResetPasswordConfirmation, ResetPassword
+from flask_cors import CORS
 #importing apis
 from auth.api_model import auth_api
 from player.api_model import player_api
@@ -14,7 +15,7 @@ import os
 
 
 app = Flask(__name__)
-
+CORS(app)
 
 #initing api
 api.init_app(app)
