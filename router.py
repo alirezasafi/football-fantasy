@@ -17,15 +17,15 @@ import os
 import logging
 app = Flask(__name__)
 
-@app.after_request
-def after_request(response):
-  response.headers.add('Access-Control-Allow-Origin', '*')
-  response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-  response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE')
-  return response
+# @app.after_request
+# def after_request(response):
+#   response.headers.add('Access-Control-Allow-Origin', '*')
+#   response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+#   response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE')
+#   return response
 
 
-logging.getLogger('flask_cors').level = logging.DEBUG
+# logging.getLogger('flask_cors').level = logging.DEBUG
 #initing api
 api.init_app(app)
 api.add_namespace(auth_api, path='/auth')
@@ -46,6 +46,7 @@ with app.app_context():
     db.create_all()
 
 
-cors = CORS(app)
+CORS(app)#, resources={r"/*": {"origins": "*"}})
+app.config['CORS_HEADERS'] = 'Content-Type'
 if __name__ == '__main__':
     app.run(host="0.0.0.0", debug=True)
