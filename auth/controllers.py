@@ -95,7 +95,7 @@ class Register(Resource):
 
         # sending email
         token = generate_confirmation_token(user.email)
-        confirm_url = url_for('confirm_registeration_email',
+        confirm_url = url_for('auth_register_confirmation',
                               token=token, _external=True)
         html = render_template('actvate_email.html', confirm_url=confirm_url)
         try:
