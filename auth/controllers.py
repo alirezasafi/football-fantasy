@@ -123,7 +123,7 @@ class RegisterConfirmation(Resource):
         except:
             return {'message': 'Invalid link or expiered link.'}
 
-        user = User.query.filter_by(email=email).first_or_404()
+        user = User.query.filter_by(email=email).first()
 
         if user.is_confirmed:
             return {'message': 'Already confirmed; please login.'}
@@ -140,7 +140,7 @@ class ResetPasswordConfirmation(Resource):
     def post(self,token):
         """Account reset password view; token required"""
         try:
-            email = confirm_registeration_token(token)
+            email = confirm_reset_password_token(token)
         except:
             return {'message': 'Invalid link or expiered link.'}
 
