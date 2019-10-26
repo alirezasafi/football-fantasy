@@ -66,13 +66,15 @@ class Register(Resource):
         email = args.get('email')
         password1 = args.get('password1')
         password2 = args.get('password2')
-        hashed_password = generate_password_hash(password1)
+        
 
-        if not username and not email or not password1 or not password2:
+        if not username or not email or not password1 or not password2:
             return {'message': 'Compelete the fields'}
 
         if password2 != password1:
             return {'message': 'Both password fileds must be the same'}
+
+        hashed_password = generate_password_hash(password1)
 
         check_user = User.query.filter(
             db.or_(User.username == username, User.email == email)).first()
@@ -114,7 +116,7 @@ class Register(Resource):
             'refresh_token': refresh_token
         }
 
-@auth_api.route('/registeration/activate/<token>')
+@auth_api.route('/registeration/activate/<token>', endpoint='auth_register_confirmation')
 class RegisterConfirmation(Resource):
     def get(self, token):
         """Account actication view"""
@@ -133,7 +135,7 @@ class RegisterConfirmation(Resource):
             db.session.commit()
             return {'message': 'Account confirmed successfully'}
 
-@auth_api.route('/reset-password/<token>')
+@auth_api.route('/reset-password/<token>', endpoint='reset_password_confirmation')
 class ResetPasswordConfirmation(Resource):
     @jwt_required
     @auth_api.expect(reset_password_model)
