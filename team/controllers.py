@@ -7,6 +7,8 @@ from config import db
 from user.models import User
 from auth.permissions import account_actication_required
 from .api_model import pick_squad_model, team_api, manage_team_model
+from werkzeug.exceptions import BadRequest
+
 
 @team_api.route('/pick-squad')
 class PickSquad(Resource):
@@ -60,6 +62,8 @@ class PickSquad(Resource):
                 db.session.commit()
                 response = make_response(jsonify({"detail": "your team was successfully registered"}), 201)
                 return response
+            else:
+                raise BadRequest(description="your team is complete!!")
 
 
 @team_api.route('/my-team')
@@ -77,8 +81,7 @@ class ManageTeam(Resource):
             squad += serialize_player(bench, False)
             response = make_response(jsonify(squad), 200)
             return response
-        response = make_response(jsonify({"detail": "first pick your team!!"}), 400)
-        return response
+        return BadRequest(description="first pick your team")
 
     @team_api.expect(manage_team_model)
     @jwt_required
@@ -94,8 +97,7 @@ class ManageTeam(Resource):
                 if new_user_squad[i]['player_id'] == user_squad[i].player_id:
                     user_squad[i].lineup = new_user_squad[i]['lineup']
                 else:
-                    response = make_response(jsonify({"detail": "400 BAD REQUEST"}), 400)
-                    return response
+                    raise BadRequest
 
             user_obj.captain = args.get('captain-id')
             db.session.commit()
