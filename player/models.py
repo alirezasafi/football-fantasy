@@ -1,5 +1,6 @@
 from config import db
 import enum
+from sqlalchemy.dialects.postgresql import ENUM
 
 
 class Position(enum.Enum):
@@ -24,5 +25,5 @@ class Player(db.Model):
     image = db.Column(db.String(100))
     shirt_number = db.Column(db.Integer)
     club = db.Column(db.String(140))
-    position = db.Column(db.Enum(Position), nullable=False)
-    status = db.Column(db.Enum(Status))
+    position = db.Column(ENUM(Position, name="Position"))
+    status = db.Column(ENUM(Status, name="status"))
