@@ -2,11 +2,19 @@ version: '3'
 services:
     web:
         build: .
+        restart: always
         ports:
             - "5000:5000"
-        # volumes:
-        #     - .:/code
-        # depends_on:
-        #     - redis
-    # redis:
-    #     image: redis
+        links:
+            - postgres:postgres
+    postgres:
+        restart: always
+        environment:
+                POSTGRES_DB: "SE"
+                POSTGRES_PASSWORD: "se23571113"
+                POSTGRES_USER: "postgres"
+        image: postgres:latest
+        volumes:
+        - ./postgresData/:/var/lib/postgresql/data
+        ports:
+        - "5432:5432"
