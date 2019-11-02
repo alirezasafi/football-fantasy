@@ -42,7 +42,7 @@ class PickSquad(Resource):
     @account_actication_required
     def post(self):
         args = team_api.payload
-        picks = args.get('picks')
+        picks = args.get('squad')
         captain_id = int(args.get('captain-id'))
         if validations.validate_squad(picks, captain_id):
             email = get_jwt_identity()['email']
@@ -50,7 +50,7 @@ class PickSquad(Resource):
             user_squad = user_obj.squad.all()
             if len(user_squad) == 0:
                 players_name = [player['name'] for player in picks]
-                players_id = [player['player_id'] for player in picks]
+                players_id = [player['id'] for player in picks]
                 players_obj = Player.query.filter(
                     db.and_(Player.id.in_(players_id), Player.name.in_(players_name))).all()
 
@@ -65,7 +65,7 @@ class PickSquad(Resource):
                 for player in picks:
                     squad_obj = models.User_Player(
                         user_id=user_obj.id,
-                        player_id=player['player_id'],
+                        player_id=player['id'],
                         lineup=player['lineup']
                     )
                     db.session.add(squad_obj)
@@ -102,14 +102,14 @@ class ManageTeam(Resource):
     def put(self):
         args = team_api.payload
         captain_id = int(args.get('captain-id'))
-        new_user_squad = sorted(args.get('squad'), key=lambda k: k['player_id'])
+        new_user_squad = sorted(args.get('squad'), key=lambda k: k['id'])
         if validations.validate_squad(new_user_squad, captain_id):
             email = get_jwt_identity()['email']
             user_obj = User.query.filter_by(email=email).first()
             user_squad = user_obj.squad.order_by(models.User_Player.player_id).all()
 
             players_name = [player['name'] for player in new_user_squad]
-            players_id = [player['player_id'] for player in new_user_squad]
+            players_id = [player['id'] for player in new_user_squad]
             players_obj = Player.query.filter(db.and_(Player.id.in_(players_id), Player.name.in_(players_name))).all()
 
             validations.validate_players(players_obj)
@@ -229,6 +229,6 @@ def serialize_player(squad, in_lineup):
 
 
 def serializer_user(user_obj):
-    user_response = {'username': user_obj.username, 'squad_name': user_obj.squad_name, 'captain': user_obj.captain,
+    user_response = {'username': user_obj.username, 'squad_name': user_obj.squad_name, 'captain-id': user_obj.captain,
                      'budget': user_obj.budget, 'overall_point': user_obj.overall_point}
     return user_response
