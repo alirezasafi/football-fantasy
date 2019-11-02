@@ -1,19 +1,12 @@
-FROM python:3.7-alpine
+FROM python:3.7
+RUN mkdir -p /app 
+COPY requirements.txt /app
 
-COPY . /app
 
 WORKDIR /app
+RUN pip install -r requirements.txt
+ADD . /app
 
-# RUN apt-get install -y libmysqlclient-dev
-
-# RUN pip install -r requirements.txt
-
-RUN apk add --no-cache mariadb-connector-c-dev ;\
-    apk add --no-cache --virtual .build-deps \
-        build-base \
-        mariadb-dev ;\
-    pip install -qq -r requirements.txt; \
-    apk del .build-deps 
 ENTRYPOINT ["python"]
 
 CMD ["router.py"]
