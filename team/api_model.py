@@ -40,3 +40,10 @@ transfer_model = team_api.model(
         'player_in': fields.Nested(transfer_player_model, required=True)
     }
 )
+fantasy_cards_model = team_api.model(
+    'FantasyCards', {
+        'card': fields.String(required=True, description="cards must be one of 'Bench Boost', 'Free Hit', 'Triple "
+                                                         "Captain', 'Wild Card'"),
+        'mode': fields.String(required=True, description="modes: 'active', 'cancel'"),
+    }
+)
