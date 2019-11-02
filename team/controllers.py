@@ -101,7 +101,7 @@ class ManageTeam(Resource):
     def put(self):
         args = team_api.payload
         new_user_squad = sorted(args.get('squad'), key=lambda k: k['player_id'])
-        if validate_squad(new_user_squad):
+        if validations.validate_squad(new_user_squad):
             email = get_jwt_identity()['email']
             user_obj = User.query.filter_by(email=email).first()
             user_squad = user_obj.squad.order_by(models.User_Player.player_id).all()
@@ -115,47 +115,6 @@ class ManageTeam(Resource):
             db.session.commit()
             response = make_response(jsonify({"detail": "successfully upgraded"}), 200)
             return response
-
-
-def validate_squad(squad):
-    GP = 0
-    DF = 0
-    MF = 0
-    FD = 0
-    for player in squad:
-        if player['position'] == 'Goalkeeper':
-            GP += 1
-        elif player['position'] == 'Defender':
-            DF += 1
-        elif player['position'] == 'Midfielder':
-            MF += 1
-        else:
-            FD += 1
-    if not (GP == 2 and DF == 5 and MF == 5 and FD == 3):
-        raise exceptions.SquadException()
-    GP = 0
-    DF = 0
-    MF = 0
-    FD = 0
-    formations = [(4,3,3), (4,4,2), (4,5,1), (3,4,3), (3,5,2), (5,4,1)]
-    lineup = 0
-    for player in squad:
-        if player['position'] == 'Goalkeeper' and player['lineup']:
-            GP += 1
-            lineup += 1
-        elif player['position'] == 'Defender' and player['lineup']:
-            DF += 1
-            lineup += 1
-        elif player['position'] == 'Midfielder' and player['lineup']:
-            MF += 1
-            lineup += 1
-        elif player['position'] == 'Forward' and player['lineup']:
-            FD += 1
-            lineup += 1
-    if (DF,MF,FD) in formations and GP == 1 and lineup == 11:
-        return True
-    else:
-        raise exceptions.FormationException
 
 
 def serialize_player(squad, in_lineup):
