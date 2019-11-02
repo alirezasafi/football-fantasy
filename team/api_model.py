@@ -29,3 +29,14 @@ manage_team_model = team_api.model(
     }
 
 )
+transfer_player_model = team_api.model(
+    'TransferPlayer', {
+        'id': fields.Integer(requied=True),
+        'name': fields.String(required=True)
+    }
+)
+transfer_model = team_api.model(
+    "Transfer", {
+        'player_in': fields.Nested(transfer_player_model, required=True)
+    }
+)
