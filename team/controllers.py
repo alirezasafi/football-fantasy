@@ -85,16 +85,18 @@ class ManageTeam(Resource):
     def get(self):
         email = get_jwt_identity()['email']
         user_obj = User.query.filter_by(email=email).first()
-        response = serializer_user(user_obj)
+        response = serialize_user(user_obj)
         lineup = user_obj.squad.filter_by(lineup=True).all()
         bench = user_obj.squad.filter_by(lineup=False).all()
         if len(lineup) == 11 and len(bench) == 4:
             squad = serialize_player(lineup, True)
             squad += serialize_player(bench, False)
             response['squad'] = squad
+            user_cards = models.Fantasy_cards.query.filter_by(user_id=user_obj.id).first()
+            response['cards'] = serialize_cards(user_cards)
             response = make_response(jsonify(response), 200)
             return response
-        return BadRequest(description="first pick your team")
+        raise BadRequest(description="first pick your team")
 
     @team_api.expect(manage_team_model)
     @jwt_required
@@ -228,7 +230,14 @@ def serialize_player(squad, in_lineup):
     return result
 
 
-def serializer_user(user_obj):
+def serialize_user(user_obj):
     user_response = {'username': user_obj.username, 'squad_name': user_obj.squad_name, 'captain-id': user_obj.captain,
                      'budget': user_obj.budget, 'overall_point': user_obj.overall_point}
     return user_response
+
+
+def serialize_cards(user_cards):
+    card_status = {0: 'inactive', 1: 'active', -1: 'used'}
+    cards_response = {'Bench Boost': card_status[user_cards.bench_boost], 'Free Hit': card_status[user_cards.free_hit],
+                      'Triple Captain': card_status[user_cards.triple_captain], 'Wild Card': card_status[user_cards.wild_card]}
+    return cards_response

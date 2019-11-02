@@ -30,7 +30,7 @@ def validate_squad(squad, captain_id):
     if not (GK == 2 and DF == 5 and MF == 5 and FD == 3):
         raise exceptions.SquadException()
 
-    lineup_players = [player['player_id'] for player in squad if player['lineup']]
+    lineup_players = [player['id'] for player in squad if player['lineup']]
     if captain_id not in lineup_players:
         raise BadRequest(description="Your selected captain must be in lineup!!")
 
