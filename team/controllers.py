@@ -6,7 +6,7 @@ from flask import make_response, jsonify, request
 from config import db
 from user.models import User
 from auth.permissions import account_actication_required
-from .api_model import pick_squad_model, team_api, manage_team_model, transfer_model
+from .api_model import pick_squad_model, team_api, manage_team_model, transfer_model, fantasy_cards_model
 from werkzeug.exceptions import BadRequest
 
 
@@ -158,6 +158,51 @@ class Transfer(Resource):
         db.session.commit()
         response = make_response(jsonify({"detail": "successfully upgraded"}), 200)
         return response
+
+
+@team_api.route('/my-team/fantasy-cards')
+class FantasyCards(Resource):
+    @team_api.expect(fantasy_cards_model)
+    @jwt_required
+    @account_actication_required
+    def post(self):
+        email = get_jwt_identity()['email']
+        args = team_api.payload
+        user_obj = User.query.filter_by(email=email).first()
+        cards = models.Fantasy_cards.query.filter_by(user_id=user_obj.id).first()
+        if cards is None:
+            raise BadRequest(description="first pick your squad")
+        selected_card = str(args.get('card'))
+        mode = str(args.get('mode'))
+        if mode == 'active':
+            card_number = validations.validate_cards_active(cards, selected_card)
+            if card_number == 1:
+                cards.bench_boost = 1
+            elif card_number == 2:
+                cards.free_hit = 1
+            elif card_number == 3:
+                cards.triple_captain = 1
+            elif card_number == 4:
+                cards.wild_card = 1
+            db.session.commit()
+            response = make_response(jsonify({"detail": "Successfully activated"}), 200)
+            return response
+
+        elif mode == 'cancel':
+            card_number = validations.validate_cards_cancel(cards, selected_card)
+            if card_number == 1:
+                cards.bench_boost = 0
+            elif card_number == 2:
+                cards.free_hit = 0
+            elif card_number == 3:
+                cards.triple_captain = 0
+            elif cards.wild_card == 4:
+                cards.wild_card = 0
+            db.session.commit()
+            response = make_response(jsonify({"detail": "Successfully canceled"}), 200)
+            return response
+        else:
+            raise BadRequest()
 
 
 def serialize_player(squad, in_lineup):
