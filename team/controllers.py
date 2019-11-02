@@ -1,5 +1,5 @@
 from flask_restplus import Resource
-from . import models, exceptions
+from . import models, exceptions, validations
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from player.models import Player
 from flask import make_response, jsonify, request
@@ -43,15 +43,25 @@ class PickSquad(Resource):
     def post(self):
         args = team_api.payload
         picks = args.get('picks')
-
-        if validate_squad(picks):
+        captain_id = int(args.get('captain-id'))
+        if validations.validate_squad(picks, captain_id):
             email = get_jwt_identity()['email']
             user_obj = User.query.filter_by(email=email).first()
             user_squad = user_obj.squad.all()
             if len(user_squad) == 0:
+                players_name = [player['name'] for player in picks]
+                players_id = [player['player_id'] for player in picks]
+                players_obj = Player.query.filter(
+                    db.and_(Player.id.in_(players_id), Player.name.in_(players_name))).all()
+
+                validations.validate_players(players_obj)
+
+                picked_players_budget = sum(player.price for player in players_obj)
+                validations.validate_budget(user_obj.budget, picked_players_budget)
+                user_obj.budget -= picked_players_budget
                 user_obj.squad_name = args.get('squad-name')
-                user_obj.captain = args.get('captain-id')
-                user_obj.budget = args.get('budget')
+                user_obj.captain = captain_id
+
                 for player in picks:
                     squad_obj = models.User_Player(
                         user_id=user_obj.id,
@@ -59,6 +69,8 @@ class PickSquad(Resource):
                         lineup=player['lineup']
                     )
                     db.session.add(squad_obj)
+                fantasy_cards = models.Fantasy_cards(user_id=user_obj.id)
+                db.session.add(fantasy_cards)
                 db.session.commit()
                 response = make_response(jsonify({"detail": "your team was successfully registered"}), 201)
                 return response
