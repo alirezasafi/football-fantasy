@@ -6,7 +6,7 @@ from flask import make_response, jsonify, request
 from config import db
 from user.models import User
 from auth.permissions import account_actication_required
-from .api_model import pick_squad_model, team_api, manage_team_model
+from .api_model import pick_squad_model, team_api, manage_team_model, transfer_model
 from werkzeug.exceptions import BadRequest
 
 
@@ -123,6 +123,41 @@ class ManageTeam(Resource):
             db.session.commit()
             response = make_response(jsonify({"detail": "successfully upgraded"}), 200)
             return response
+
+
+@team_api.route('/my-team/transfer')
+class Transfer(Resource):
+    @team_api.expect(transfer_model)
+    @jwt_required
+    @account_actication_required
+    def post(self):
+        args = team_api.payload
+        player_in = Player.query.filter(db.and_(Player.name == args.get('player_in')['name'],
+                                                Player.id == args.get('player_in')['id'])).first()
+        player_out = Player.query.filter(db.and_(Player.name == args.get('player_out')['name'],
+                                                 Player.id == args.get('player_out')['id'])).first()
+        validations.validate_transfer_player(player_in, player_out)
+        email = get_jwt_identity()['email']
+        user_obj = User.query.filter_by(email=email).first()
+        user_squad = user_obj.squad.all()
+
+        if len(user_squad) != 15:
+            raise BadRequest(description="You cannot transfer player")
+
+        user_squad_player_id = [player.player_id for player in user_squad]
+        if (player_in.id not in user_squad_player_id) or (player_out.id in user_squad_player_id):
+            raise BadRequest(description="You cannot transfer player")
+
+        if user_obj.budget + (player_in.price - player_out.price) < 0:
+            raise BadRequest(description="your budget is not enough")
+        user_obj.budget += player_in.price - player_out.price
+
+        squad_obj = user_squad[user_squad_player_id.index(player_in.id)]
+        squad_obj.player_id = player_out.id
+
+        db.session.commit()
+        response = make_response(jsonify({"detail": "successfully upgraded"}), 200)
+        return response
 
 
 def serialize_player(squad, in_lineup):

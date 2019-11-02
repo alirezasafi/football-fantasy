@@ -56,5 +56,8 @@ def validate_squad(squad, captain_id):
         raise exceptions.FormationException
 
 
-
-
+def validate_transfer_player(player_in, player_out):
+    if player_out is None or player_out is None:
+        raise BadRequest(description="Your selected players do not exist!!")
+    if player_out.position.value != player_in.position.value:
+        raise BadRequest(description="You cannot transfer players with different position!!")
