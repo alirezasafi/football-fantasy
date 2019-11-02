@@ -1,5 +1,5 @@
 from flask_restplus import Resource
-from . import models, exceptions, validations
+from . import models, validations
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from player.models import Player
 from flask import make_response, jsonify, request
@@ -85,13 +85,14 @@ class ManageTeam(Resource):
     def get(self):
         email = get_jwt_identity()['email']
         user_obj = User.query.filter_by(email=email).first()
+        response = serializer_user(user_obj)
         lineup = user_obj.squad.filter_by(lineup=True).all()
         bench = user_obj.squad.filter_by(lineup=False).all()
-
         if len(lineup) == 11 and len(bench) == 4:
             squad = serialize_player(lineup, True)
             squad += serialize_player(bench, False)
-            response = make_response(jsonify(squad), 200)
+            response['squad'] = squad
+            response = make_response(jsonify(response), 200)
             return response
         return BadRequest(description="first pick your team")
 
@@ -100,18 +101,25 @@ class ManageTeam(Resource):
     @account_actication_required
     def put(self):
         args = team_api.payload
+        captain_id = int(args.get('captain-id'))
         new_user_squad = sorted(args.get('squad'), key=lambda k: k['player_id'])
-        if validations.validate_squad(new_user_squad):
+        if validations.validate_squad(new_user_squad, captain_id):
             email = get_jwt_identity()['email']
             user_obj = User.query.filter_by(email=email).first()
             user_squad = user_obj.squad.order_by(models.User_Player.player_id).all()
+
+            players_name = [player['name'] for player in new_user_squad]
+            players_id = [player['player_id'] for player in new_user_squad]
+            players_obj = Player.query.filter(db.and_(Player.id.in_(players_id), Player.name.in_(players_name))).all()
+
+            validations.validate_players(players_obj)
             for i in range(15):
-                if new_user_squad[i]['player_id'] == user_squad[i].player_id:
+                if players_id[i] == user_squad[i].player_id:
                     user_squad[i].lineup = new_user_squad[i]['lineup']
                 else:
-                    raise BadRequest
+                    raise BadRequest(description="Your selected players do not exist in squad")
 
-            user_obj.captain = args.get('captain-id')
+            user_obj.captain = captain_id
             db.session.commit()
             response = make_response(jsonify({"detail": "successfully upgraded"}), 200)
             return response
@@ -138,3 +146,9 @@ def serialize_player(squad, in_lineup):
             }
         )
     return result
+
+
+def serializer_user(user_obj):
+    user_response = {'username': user_obj.username, 'squad_name': user_obj.squad_name, 'captain': user_obj.captain,
+                     'budget': user_obj.budget, 'overall_point': user_obj.overall_point}
+    return user_response
