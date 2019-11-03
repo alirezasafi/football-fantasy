@@ -1,13 +1,13 @@
 from config import db
 import enum
 from sqlalchemy.dialects.postgresql import ENUM
-
+from club.models import Club
 
 class Position(enum.Enum):
     GP = 'Goalkeeper'
     DF = 'Defender'
     MF = 'Midfielder'
-    FD = 'Forward'
+    AT = 'Attacker'
 
 
 class Status(enum.Enum):
@@ -19,11 +19,11 @@ class Status(enum.Enum):
 class Player(db.Model):
     __tablename__ = 'Player'
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(200), nullable=False, unique=True)
-    shirt_name = db.Column(db.String(140))
+    name = db.Column(db.String(100), nullable=False, unique=True)
     price = db.Column(db.Float)
     image = db.Column(db.String(100))
     shirt_number = db.Column(db.Integer)
-    club = db.Column(db.String(140))
+    club = db.Column(db.Integer, db.ForeignKey('Club.id'))
     position = db.Column(ENUM(Position, name="Position"))
     status = db.Column(ENUM(Status, name="status"))
+    events = db.relationship('Event', backref='Player', lazy=True)
