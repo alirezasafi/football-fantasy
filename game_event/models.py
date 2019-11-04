@@ -12,7 +12,8 @@ class EventType(enum.Enum):
 
 class Event(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    player_id = db.Column(db.Integer, db.ForeignKey(Player.id), nullable=False)
-    EventType = db.Column(ENUM(EventType, name="EventType"))
+    name = db.Column(db.String(80))
+    player_id = db.Column(db.Integer, db.ForeignKey(Player.id))
+    event_type = db.Column(ENUM(EventType, name="event_type"))
     minute = db.Column(db.Integer)
     match_id = db.Column(db.Integer, db.ForeignKey(Match.id))

@@ -15,17 +15,13 @@ class PlayerStatus(enum.Enum):
     BN = "Bench"
 
 class MatchPlayer(db.Model):
-    # import player.models
     __tablename__='MatchPlayer'
     id = db.Column(db.Integer, primary_key=True)
     player_id = db.Column(db.Integer, db.ForeignKey(Player.id), nullable=False)
-    match_id = db.Column(db.Integer, db.ForeignKey(Match.id), nullable=False)
+    match_id = db.Column(db.Integer, db.ForeignKey('match.id'), nullable=False)
     playerStatus = db.Column(ENUM(PlayerStatus, name="playerstatus"))
 
 class Match(db.Model):
-    import club.models
-    import event.models
-    import compeition.models
     id = db.Column(db.Integer, primary_key=True)
     competition_id = db.Column(db.Integer, db.ForeignKey(Competition.id), nullable=False)
     utcDate = db.Column(db.DateTime, nullable=False)

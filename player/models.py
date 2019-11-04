@@ -25,5 +25,5 @@ class Player(db.Model):
     club_id = db.Column(db.Integer, db.ForeignKey(Club.id))
     position = db.Column(ENUM(PlayerPosition, name="playerposition"))
     status = db.Column(ENUM(PlayerStatus, name="playerstatus"))
-    # events = db.relationship('Event', backref='player', lazy='dynamic')
+    events = db.relationship('Event', backref='player', lazy='dynamic')
 

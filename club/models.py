@@ -9,4 +9,3 @@ class Club(db.Model):
     lastUpdated = db.Column(db.DateTime)
     area_id = db.Column(db.Integer, db.ForeignKey(Area.id))
     players = db.relationship('Player', backref='club', lazy='dynamic')
-    # compeitions = db.relationship('Competition', backref='club', lazy='dynamic')

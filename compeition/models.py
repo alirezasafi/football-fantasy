@@ -10,7 +10,7 @@ class CompetitionType(enum.Enum):
 
 club_competition = db.Table('club_competition',
     db.Column('club_id', db.Integer, db.ForeignKey(Club.id), primary_key=True),
-    db.Column('competition_id', db.Integer, db.ForeignKey(Competition.id), primary_key=True)
+    db.Column('competition_id', db.Integer, db.ForeignKey('competition.id'), primary_key=True)
 )
 
 class Competition(db.Model):
