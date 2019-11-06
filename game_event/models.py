@@ -7,12 +7,18 @@ from match.models import Match
 class EventType(enum.Enum):
     GO = 'Goal'
     AS = 'Assist'
-    CD = 'Card'
+    YELLOW_CARD = 'YellowCard'
+    YELLOW_RED_CARD = 'YellowRedCard'
+    RED_CARD = 'RedCard'
 
-
+class MatchSubstitution(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    player_in_id = db.Column(db.Integer, db.ForeignKey(Player.id))
+    player_out_id = db.Column(db.Integer, db.ForeignKey(Player.id))
+    minute = db.Column(db.Integer)
+    match_id = db.Column(db.Integer, db.ForeignKey(Match.id))
 class Event(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(80))
     player_id = db.Column(db.Integer, db.ForeignKey(Player.id))
     event_type = db.Column(ENUM(EventType, name="event_type"))
     minute = db.Column(db.Integer)
