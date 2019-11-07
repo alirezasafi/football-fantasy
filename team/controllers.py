@@ -11,25 +11,7 @@ from werkzeug.exceptions import BadRequest
 from player.marshmallow import PlayerSchema
 from compeition.models import Competition
 
-@team_api.route('/<int:competition_id>/pick-squad')
 class PickSquad(Resource):
-    # @jwt_required
-    # @account_activation_required
-    def get(self,competition_id):
-        """get all players for a competition """
-        competition = Competition.query.filter(Competition.id==competition_id).first()
-        if competition == None:
-            return {'message':'no competition found with given id'}
-
-        clubs = competition.clubs
-        players = []
-        for club in clubs:
-            players+= club.players.all()
-
-        players_response = PlayerSchema(many=True)
-        players_response = players_response.dump(players)
-        return players_response, 200
-
     @team_api.expect(pick_squad_model)
     @jwt_required
     @account_activation_required
@@ -69,8 +51,6 @@ class PickSquad(Resource):
                 return response
             else:
                 raise BadRequest(description="your team is complete!!")
-
-
 @team_api.route('/my-team')
 class ManageTeam(Resource):
     @jwt_required

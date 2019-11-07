@@ -21,7 +21,7 @@ from database_population.areas_population_controller import PopulateAreas
 from database_population.competition_club_population_controller import PopulateClubsCompetitions
 from database_population.player_population_controller import PopulatePlayers
 from database_population.match_event_population_controller import PopulateMatchesEvents
-from player.controllers import MediaPlayer
+from player.controllers import MediaPlayer, CompetitionPlayers
 from compeition.controllers import CompetitionListView
 from club.controller import ClubByCompetition
 
