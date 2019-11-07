@@ -1,35 +1,19 @@
 from flask_restplus import Resource
-from . import models, validations
+from . import models, validations, marshmallow
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from player.models import Player
 from flask import make_response, jsonify, request
 from config import db
 from user.models import User
+from user.marshmallow import UserSchema
 from auth.permissions import account_activation_required
 from .api_model import pick_squad_model, team_api, manage_team_model, transfer_model, fantasy_cards_model
 from werkzeug.exceptions import BadRequest
 from player.marshmallow import PlayerSchema
 from compeition.models import Competition
 
-@team_api.route('/<int:competition_id>/pick-squad')
+
 class PickSquad(Resource):
-    # @jwt_required
-    # @account_activation_required
-    def get(self,competition_id):
-        """get all players for a competition """
-        competition = Competition.query.filter(Competition.id==competition_id).first()
-        if competition == None:
-            return {'message':'no competition found with given id'}
-
-        clubs = competition.clubs
-        players = []
-        for club in clubs:
-            players+= club.players.all()
-
-        players_response = PlayerSchema(many=True)
-        players_response = players_response.dump(players)
-        return players_response, 200
-
     @team_api.expect(pick_squad_model)
     @jwt_required
     @account_activation_required
@@ -70,7 +54,6 @@ class PickSquad(Resource):
             else:
                 raise BadRequest(description="your team is complete!!")
 
-
 @team_api.route('/my-team')
 class ManageTeam(Resource):
     @jwt_required
@@ -78,15 +61,27 @@ class ManageTeam(Resource):
     def get(self):
         email = get_jwt_identity()['email']
         user_obj = User.query.filter_by(email=email).first()
-        response = serialize_user(user_obj)
+        user_response = UserSchema(only={'username', 'budget', 'overall_point', 'squad_name'})
+        user_response = user_response.dump(user_obj)
+        response = user_response
+        response['captain-id'] = user_obj.captain
         lineup = user_obj.squad.filter_by(lineup=True).all()
         bench = user_obj.squad.filter_by(lineup=False).all()
         if len(lineup) == 11 and len(bench) == 4:
-            squad = serialize_player(lineup, True)
-            squad += serialize_player(bench, False)
+            lineup_response = PlayerSchema(many=True)
+            lineup_response = lineup_response.dump(lineup)
+            for player in lineup_response:
+                player['in_lineup'] = True
+            bench_response = PlayerSchema(many=True)
+            bench_response = bench_response.dump(bench)
+            for player in bench_response:
+                player['in_lineup'] = False
+            squad = lineup_response + bench_response
             response['squad'] = squad
             user_cards = models.Fantasy_cards.query.filter_by(user_id=user_obj.id).first()
-            response['cards'] = serialize_cards(user_cards)
+            cards_response = marshmallow.CardsSchema()
+            cards_response = cards_response.dump(user_cards)
+            response['cards'] = cards_response
             response = make_response(jsonify(response), 200)
             return response
         raise BadRequest(description="first pick your team")
@@ -198,39 +193,3 @@ class FantasyCards(Resource):
             return response
         else:
             raise BadRequest()
-
-
-def serialize_player(squad, in_lineup):
-    result = []
-    for element in squad:
-        player = Player.query.filter_by(id=element.player_id).first()
-        player_image = None
-        if player.image is not None:
-            player_image = request.host + '/media/player/' + player.image
-        result.append(
-            {
-                "id": player.id,
-                "name": player.name,
-                "price": player.price,
-                "image": player_image,
-                "shirt_number": player.shirt_number,
-                "club": player.club,
-                "position": player.position.value,
-                "status": player.status.value,
-                "lineup": in_lineup
-            }
-        )
-    return result
-
-
-def serialize_user(user_obj):
-    user_response = {'username': user_obj.username, 'squad_name': user_obj.squad_name, 'captain-id': user_obj.captain,
-                     'budget': user_obj.budget, 'overall_point': user_obj.overall_point}
-    return user_response
-
-
-def serialize_cards(user_cards):
-    card_status = {0: 'inactive', 1: 'active', -1: 'used'}
-    cards_response = {'Bench Boost': card_status[user_cards.bench_boost], 'Free Hit': card_status[user_cards.free_hit],
-                      'Triple Captain': card_status[user_cards.triple_captain], 'Wild Card': card_status[user_cards.wild_card]}
-    return cards_response
