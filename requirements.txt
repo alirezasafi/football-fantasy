@@ -9,3 +9,6 @@ Flask-Script>=2.0.6
 flask-cors
 Flask-Testing
 psycopg2-binary
+requests
+flask-marshmallow
+marshmallow-sqlalchemy

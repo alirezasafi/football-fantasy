@@ -1,6 +1,6 @@
 from flask_restplus import Namespace, fields
 
-auth_api = Namespace('auth',description="authentication apis")
+auth_api = Namespace('Authentication',description="authentication apis")
 
 login_model = auth_api.model(
     'Login',{
