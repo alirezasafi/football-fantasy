@@ -9,7 +9,7 @@ from config import ma
 
 @competition_api.route('/list')
 class CompetitionListView(Resource):
-    @account_activation_required
+    # @account_activation_required
     @jwt_required
     def get(self):
         all_competitions = Competition.query.all()
