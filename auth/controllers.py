@@ -1,22 +1,24 @@
-from config import db, api
+from config import db
+from .api_model import auth_api, registeration_model, login_model, reset_password_model
 from flask_restplus import Resource
 from user.models import User
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_jwt_extended import create_access_token, create_refresh_token, get_jwt_identity, jwt_required
-from .parsers import login_parser, registeration_parser, reset_password_parser
 from .emailToken import confirm_registeration_token, generate_confirmation_token, send_email, generate_reset_password_token, confirm_reset_password_token
-from flask import render_template, url_for
+from flask import render_template, url_for, request
 import smtplib
 
+@auth_api.route('/login')
 class Login(Resource):
-    @api.expect(login_parser)
+    
+    @auth_api.expect(login_model)
     def post(self):
         """login view"""
-        args = login_parser.parse_args()
+        args = auth_api.payload
 
-        username = args['username']
-        email = args['email']
-        password = args['password']
+        username = args.get('username')
+        email = args.get('email')
+        password = args.get('password')
 
         if not username and not email or not password:
             return {'message': 'Missing credentials.'}
@@ -52,25 +54,27 @@ class Login(Resource):
         else:
             return {'message': 'wrong password'}
 
-
+@auth_api.route('/registeration')
 class Register(Resource):
 
-    @api.expect(registeration_parser)
+    @auth_api.expect(registeration_model)
     def post(self):
         """registeration view"""
-        args = registeration_parser.parse_args()
+        args = auth_api.payload
 
-        username = args['username']
-        email = args['email']
-        password1 = args['password1']
-        password2 = args['password2']
-        hashed_password = generate_password_hash(password1)
+        username = args.get('username')
+        email = args.get('email')
+        password1 = args.get('password1')
+        password2 = args.get('password2')
+        
 
-        if not username and not email or not password1 or not password2:
+        if not username or not email or not password1 or not password2:
             return {'message': 'Compelete the fields'}
 
         if password2 != password1:
             return {'message': 'Both password fileds must be the same'}
+
+        hashed_password = generate_password_hash(password1)
 
         check_user = User.query.filter(
             db.or_(User.username == username, User.email == email)).first()
@@ -93,7 +97,7 @@ class Register(Resource):
 
         # sending email
         token = generate_confirmation_token(user.email)
-        confirm_url = url_for('confirm_registeration_email',
+        confirm_url = url_for('auth_register_confirmation',
                               token=token, _external=True)
         html = render_template('actvate_email.html', confirm_url=confirm_url)
         try:
@@ -112,7 +116,7 @@ class Register(Resource):
             'refresh_token': refresh_token
         }
 
-
+@auth_api.route('/registeration/activate/<token>', endpoint='auth_register_confirmation')
 class RegisterConfirmation(Resource):
     def get(self, token):
         """Account actication view"""
@@ -121,7 +125,7 @@ class RegisterConfirmation(Resource):
         except:
             return {'message': 'Invalid link or expiered link.'}
 
-        user = User.query.filter_by(email=email).first_or_404()
+        user = User.query.filter_by(email=email).first()
 
         if user.is_confirmed:
             return {'message': 'Already confirmed; please login.'}
@@ -131,22 +135,22 @@ class RegisterConfirmation(Resource):
             db.session.commit()
             return {'message': 'Account confirmed successfully'}
 
-
+@auth_api.route('/reset-password/<token>', endpoint='reset_password_confirmation')
 class ResetPasswordConfirmation(Resource):
     @jwt_required
-    @api.expect(reset_password_parser)
+    @auth_api.expect(reset_password_model)
     def post(self,token):
         """Account reset password view; token required"""
         try:
-            email = confirm_registeration_token(token)
+            email = confirm_reset_password_token(token)
         except:
             return {'message': 'Invalid link or expiered link.'}
 
-        args = reset_password_parser.parse_args()
+        args = auth_api.payload
 
-        old_password = args['old_password']
-        new_password1 = args['new_password1']
-        new_password2 = args['new_password2']
+        old_password = args.get('old_password')
+        new_password1 = args.get('new_password1')
+        new_password2 = args.get('new_password2')
 
         message = None
 

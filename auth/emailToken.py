@@ -2,6 +2,7 @@ from itsdangerous import URLSafeTimedSerializer
 from config import mail
 from flask import current_app
 from flask_mail import Message
+from werkzeug import exceptions
 
 
 def generate_confirmation_token(email):
@@ -22,7 +23,7 @@ def confirm_registeration_token(token):
             max_age=current_app.config['REGISTER_EXPIRATION']
         )
     except:
-        return False
+        raise exceptions.NotFound
     return email
 
 def generate_reset_password_token(email):
@@ -42,7 +43,7 @@ def confirm_reset_password_token(token):
             max_age=current_app.config['RESET_PASSWORD_EXPIRATION']
         )
     except:
-        return False
+        raise exceptions.NotFound
     return email
 
 def send_email(to, subject, template):
