@@ -37,6 +37,7 @@ class PopulatePlayers(Resource):
                             status = 'C',
                             price = random.randint(4, 11),
                             point = random.randint(5, 43),
+                            image= "https://waysideschools.org/wp-content/uploads/2015/07/default-profile-pic.png"
                         )
                         player_ids.append(player['id'])
                         db.session.add(player_to_insert)

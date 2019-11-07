@@ -5,41 +5,34 @@ from player.models import Player
 from flask import make_response, jsonify, request
 from config import db
 from user.models import User
-from auth.permissions import account_actication_required
+from auth.permissions import account_activation_required
 from .api_model import pick_squad_model, team_api, manage_team_model, transfer_model, fantasy_cards_model
 from werkzeug.exceptions import BadRequest
+from player.marshmallow import PlayerSchema
+from compeition.models import Competition
 
-
-@team_api.route('/pick-squad')
+@team_api.route('/<int:competition_id>/pick-squad')
 class PickSquad(Resource):
-    @jwt_required
-    @account_actication_required
-    def get(self):
-        players = Player.query.all()
-        players_response = []
-        for player in players:
-            player_image = None
-            if player.image is not None:
-                player_image = request.host + '/media/player/' + player.image
+    # @jwt_required
+    # @account_activation_required
+    def get(self,competition_id):
+        """get all players for a competition """
+        competition = Competition.query.filter(Competition.id==competition_id).first()
+        if competition == None:
+            return {'message':'no competition found with given id'}
 
-            players_response.append(
-                {
-                    "id": player.id,
-                    "name": player.name,
-                    "price": player.price,
-                    "image": player_image,
-                    "shirt_number": player.shirt_number,
-                    "club": player.club,
-                    "position": player.position.value,
-                    "status": player.status.value
-                }
-            )
-        response = make_response(jsonify(players_response), 200)
-        return response
+        clubs = competition.clubs
+        players = []
+        for club in clubs:
+            players+= club.players.all()
+
+        players_response = PlayerSchema(many=True)
+        players_response = players_response.dump(players)
+        return players_response, 200
 
     @team_api.expect(pick_squad_model)
     @jwt_required
-    @account_actication_required
+    @account_activation_required
     def post(self):
         args = team_api.payload
         picks = args.get('squad')
@@ -81,7 +74,7 @@ class PickSquad(Resource):
 @team_api.route('/my-team')
 class ManageTeam(Resource):
     @jwt_required
-    @account_actication_required
+    @account_activation_required
     def get(self):
         email = get_jwt_identity()['email']
         user_obj = User.query.filter_by(email=email).first()
@@ -100,7 +93,7 @@ class ManageTeam(Resource):
 
     @team_api.expect(manage_team_model)
     @jwt_required
-    @account_actication_required
+    @account_activation_required
     def put(self):
         args = team_api.payload
         captain_id = int(args.get('captain-id'))
@@ -131,7 +124,7 @@ class ManageTeam(Resource):
 class Transfer(Resource):
     @team_api.expect(transfer_model)
     @jwt_required
-    @account_actication_required
+    @account_activation_required
     def post(self):
         args = team_api.payload
         player_in = Player.query.filter(db.and_(Player.name == args.get('player_in')['name'],
@@ -166,7 +159,7 @@ class Transfer(Resource):
 class FantasyCards(Resource):
     @team_api.expect(fantasy_cards_model)
     @jwt_required
-    @account_actication_required
+    @account_activation_required
     def post(self):
         email = get_jwt_identity()['email']
         args = team_api.payload
