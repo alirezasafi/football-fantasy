@@ -11,3 +11,4 @@ Flask-Testing
 psycopg2-binary
 requests
 flask-marshmallow
+marshmallow-sqlalchemy
