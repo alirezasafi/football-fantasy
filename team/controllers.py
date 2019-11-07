@@ -13,6 +13,7 @@ from player.marshmallow import PlayerSchema
 from compeition.models import Competition
 
 
+@team_api.route('/pick-squad')
 class PickSquad(Resource):
     @team_api.expect(pick_squad_model)
     @jwt_required
