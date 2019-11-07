@@ -1,6 +1,6 @@
 from flask_restplus import Namespace, fields
 
-team_api = Namespace('team', description="team related apis")
+team_api = Namespace('Team', description="team related apis")
 
 player_model = team_api.model(
     'player',{
