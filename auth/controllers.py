@@ -32,6 +32,7 @@ class Login(Resource):
         if check_password_hash(user.password, password):
             access_token = create_access_token(
                 identity={
+                    "id" : user.id ,
                     "username": user.username,
                     'is_admin': user.is_admin,
                     'email': user.email,
@@ -40,6 +41,7 @@ class Login(Resource):
             )
             refresh_token = create_refresh_token(
                 identity={
+                    "id" : user.id ,
                     "username": user.username,
                     'is_admin': user.is_admin,
                     'email': user.email,
@@ -91,9 +93,9 @@ class Register(Resource):
 
         # generating token
         access_token = create_access_token(
-            identity={"username": user.username, 'is_admin': user.is_admin, 'email': user.email})
+            identity={"id" : user.id ,"username": user.username, 'is_admin': user.is_admin, 'email': user.email})
         refresh_token = create_refresh_token(
-            identity={"username": user.username, 'is_admin': user.is_admin, 'email': user.email})
+            identity={"id" : user.id ,"username": user.username, 'is_admin': user.is_admin, 'email': user.email})
 
         # sending email
         token = generate_confirmation_token(user.email)
@@ -189,3 +191,15 @@ class ResetPassword(Resource):
             return {'message':'Reset password email has been sent.'}
         except smtplib.SMTPRecipientsRefused:
             return {'message': 'unable to send email to {}'.format(email)}
+
+@user_api.route('/whoami')
+class WhoAmI(Resource):
+    @jwt_required
+    def get(self):
+        """send request to get your data"""
+
+        decodedToken = get_jwt_identity()
+        user = User.query.filter_by(id = decodedToken.get('id')).first()
+        user_schema = UserSchema()
+        user = user_schema.dump(user)
+        return {'info':user}
