@@ -4,7 +4,7 @@ from compeition.models import Competition
 from flask_jwt_extended import jwt_required
 from auth.permissions import account_activation_required
 from .api_model import competition_api
-from .marshmallow import CompetitionSchema
+from .competition_marshmallow import CompetitionSchema
 from config import ma
 
 @competition_api.route('/list')
