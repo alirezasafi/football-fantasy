@@ -22,13 +22,13 @@ class Login(Resource):
         password = args.get('password')
 
         if not username and not email or not password:
-            return {'message': 'Missing credentials.'}
+            return {'message': 'Missing credentials.'}, 400
 
         user = User.query.filter(
             db.or_(User.email == email, User.username == username)).first()
 
         if not user:
-            return {'message': 'No user found!'}
+            return {'message': 'No user found!'}, 404
 
         if check_password_hash(user.password, password):
             access_token = create_access_token(
@@ -53,9 +53,9 @@ class Login(Resource):
                 'message': 'successful login',
                 'access_token': access_token,
                 'refresh_token': refresh_token
-            }
+            }, 200
         else:
-            return {'message': 'wrong password'}
+            return {'message': 'wrong password'}, 400
 
 @auth_api.route('/registeration')
 class Register(Resource):
@@ -72,17 +72,17 @@ class Register(Resource):
         
 
         if not username or not email or not password1 or not password2:
-            return {'message': 'Compelete the fields'}
+            return {'message': 'Compelete the fields'} ,400
 
         if password2 != password1:
-            return {'message': 'Both password fileds must be the same'}
+            return {'message': 'Both password fileds must be the same'}, 400
 
         hashed_password = generate_password_hash(password1)
 
         check_user = User.query.filter(
             db.or_(User.username == username, User.email == email)).first()
         if check_user is not None:
-            return {'message': 'User already registered'}
+            return {'message': 'User already registered'}, 403
 
         user = User(
             username=username,
@@ -107,7 +107,7 @@ class Register(Resource):
             send_email(
                 user.email, "SE project : Registeration confirmation email", html)
         except smtplib.SMTPRecipientsRefused:
-            return {'message': 'unable to send email to {}'.format(user.email)}
+            return {'message': 'unable to send email to {}'.format(user.email)}, 400
 
         #applying changes to database
         db.session.add(user)
@@ -117,7 +117,7 @@ class Register(Resource):
             'message': 'Registration successful, confirmation email is sent to your email.',
             'access_token': access_token,
             'refresh_token': refresh_token
-        }
+        }, 201
 
 @auth_api.route('/registeration/activate/<token>', endpoint='auth_register_confirmation')
 class RegisterConfirmation(Resource):
@@ -126,17 +126,17 @@ class RegisterConfirmation(Resource):
         try:
             email = confirm_registeration_token(token)
         except:
-            return {'message': 'Invalid link or expiered link.'}
+            return {'message': 'Invalid link or expiered link.'}, 400
 
         user = User.query.filter_by(email=email).first()
 
         if user.is_confirmed:
-            return {'message': 'Already confirmed; please login.'}
+            return {'message': 'Already confirmed; please login.'}, 200
         else:
             user.is_confirmed = True
             db.session.add(user)
             db.session.commit()
-            return {'message': 'Account confirmed successfully'}
+            return {'message': 'Account confirmed successfully'}, 202
 
 @auth_api.route('/reset-password/<token>', endpoint='reset_password_confirmation')
 class ResetPasswordConfirmation(Resource):
@@ -147,7 +147,7 @@ class ResetPasswordConfirmation(Resource):
         try:
             email = confirm_reset_password_token(token)
         except:
-            return {'message': 'Invalid link or expiered link.'}
+            return {'message': 'Invalid link or expiered link.'}, 400
 
         args = auth_api.payload
 
@@ -155,13 +155,13 @@ class ResetPasswordConfirmation(Resource):
         new_password1 = args.get('new_password1')
         new_password2 = args.get('new_password2')
 
-        message = None
+        message = (None, None)
 
         if not old_password or not new_password1 or not new_password2:
-            message = "Complete the fields."
+            message = ("Complete the fields.", 400)
 
         if new_password2 != new_password1:
-            message = "Old passwords should match."
+            message = ("Old passwords should match.", 400)
 
         user = User.query.filter_by(email=email).first_or_404()
 
@@ -169,11 +169,11 @@ class ResetPasswordConfirmation(Resource):
             user.password = generate_password_hash(new_password2)
             db.session.add(user)
             db.session.commit()
-            message = "New password has been set."
+            message = ("New password has been set.",200)
         else:
-            message = "Password is wrong."
+            message = ("Password is wrong.",400)
         
-        return {'message':message}
+        return {'message':message[0]}, message[1]
 
 class ResetPassword(Resource):
     @jwt_required
@@ -189,9 +189,9 @@ class ResetPassword(Resource):
         send_email(email, "SE project Reset password",html)
         try:
             send_email(email, "SE project Reset password",html)
-            return {'message':'Reset password email has been sent.'}
+            return {'message':'Reset password email has been sent.'}, 200
         except smtplib.SMTPRecipientsRefused:
-            return {'message': 'unable to send email to {}'.format(email)}
+            return {'message': 'unable to send email to {}'.format(email)}, 400
 
 @auth_api.route('/whoami')
 class WhoAmI(Resource):
@@ -203,4 +203,4 @@ class WhoAmI(Resource):
         user = User.query.filter_by(id = decodedToken.get('id')).first()
         user_schema = UserSchema()
         user = user_schema.dump(user)
-        return {'info':user}
+        return {'info':user}, 200

@@ -32,7 +32,7 @@ class CompetitionPlayers(Resource):
         """get all players for a competition """
         competition = Competition.query.filter(Competition.id==competition_id).first()
         if competition == None:
-            return {'message':'no competition found with given id'}
+            return {'message':'no competition found with given id'}, 404
 
         clubs = competition.clubs
         players = []

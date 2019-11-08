@@ -16,7 +16,7 @@ class PopulatePlayers(Resource):
         """population order : 3"""
         clubs = Club.query.all()
         if len(clubs) ==0:
-            return{'message':'first populate clubs'}
+            return{'message':'first populate clubs'}, 400
         done_clubs = 1
         player_ids=[]
         for club in clubs:
@@ -46,7 +46,7 @@ class PopulatePlayers(Resource):
                 sleep(5)
                 db.session.commit()
             except:
-                return {'message':resp.json()['message']}
+                return {'message':resp.json()['message']}, 400
         
 
-        return {'message':'players are populated'}
+        return {'message':'players are populated'}, 200

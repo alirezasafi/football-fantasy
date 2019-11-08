@@ -15,11 +15,11 @@ class ClubByCompetition(Resource):
         """pass competition id and get its clubs"""
         competition = Competition.query.filter(Competition.id == competition_id).first()
         if competition == None:
-            return {'message':"There's no such competition in database"}
+            return {'message':"There's no such competition in database"}, 404
 
         clubs = competition.clubs
 
         output = []
         club_schema = ClubSchema(many = True)
         output = club_schema.dump(clubs)
-        return {'clubs':output}
+        return {'clubs':output}, 200
