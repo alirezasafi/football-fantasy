@@ -80,11 +80,11 @@ class ManageTeam(Resource):
             lineup_response = PlayerSchema(many=True)
             lineup_response = lineup_response.dump(lineup_result)
             for player in lineup_response:
-                player['in_lineup'] = True
+                player['lineup'] = True
             bench_response = PlayerSchema(many=True)
             bench_response = bench_response.dump(bench_result)
             for player in bench_response:
-                player['in_lineup'] = False
+                player['lineup'] = False
             squad = lineup_response + bench_response
             response['squad'] = squad
             user_cards = models.Fantasy_cards.query.filter_by(user_id=user_obj.id).first()

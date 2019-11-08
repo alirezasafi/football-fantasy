@@ -20,4 +20,4 @@ class CompetitionListView(Resource):
             comp = competition_schema.dump(competition)
             output.append(comp)
         
-        return {'competitions':output}
+        return {'competitions':output}, 200

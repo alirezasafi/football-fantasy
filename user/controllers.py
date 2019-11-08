@@ -23,7 +23,7 @@ class UserView(Resource):
         """get user by id; only admin has access"""
         user = User.query.filter_by(id=user_id).first()
         if user is None:
-            return {"message": "No user found"}
+            return {"message": "No user found"}, 404
         user_dict = {
             'username': user.username,
             'email': user.email,
@@ -31,7 +31,7 @@ class UserView(Resource):
             'password': user.password,
             'id': user.id
         }
-        return{'user': user_dict}
+        return{'user': user_dict}, 200
 
     @jwt_required
     @admin_required
@@ -40,12 +40,12 @@ class UserView(Resource):
         if user_id is not None:
             user = User.query.filter_by(id=user_id).first()
             if user ==None:
-                return {"message": "No such user found."}
+                return {"message": "No such user found."}, 404
             db.session.delete(user)
             db.session.commit()
-            return {"message": "User deleted."}
+            return {"message": "User deleted."}, 200
         else:
-            return {'message': 'Specify the user.'}
+            return {'message': 'Specify the user.'}, 400
 
 @user_api.route('/list')
 class UserListView(Resource):
@@ -64,7 +64,7 @@ class UserListView(Resource):
                 'is_admin':user.is_admin
             }
             output.append(user_dict)
-        return {'users': output}
+        return {'users': output}, 200
 
 
 @user_api.route('/profile')

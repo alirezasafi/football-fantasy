@@ -51,4 +51,4 @@ class PopulateClubsCompetitions(Resource):
                 db.session.add(club_to_insert)
             db.session.add(competition_to_insert)
         db.session.commit()
-        return {'message':'clubs and competitions are populated'}
+        return {'message':'clubs and competitions are populated'}, 200

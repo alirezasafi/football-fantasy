@@ -22,4 +22,4 @@ class PopulateAreas(Resource):
             db.session.add(to_insert)
         db.session.commit()
 
-        return {'message':'Areas are populated'}
+        return {'message':'Areas are populated'}, 200

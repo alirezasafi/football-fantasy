@@ -7,7 +7,7 @@ def database_empty_required(table):
         def wrapper(*args, **kwargs):
             rows = table.query.all()
             if len(rows) != 0:
-                return {"message":"the database is not empty better to use update endpoint."}
+                return {"message":"the database is not empty better to use update endpoint."}, 400
             return func(*args, **kwargs)
         return wrapper
     return inner_function
