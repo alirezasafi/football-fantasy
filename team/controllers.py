@@ -1,11 +1,11 @@
 from flask_restplus import Resource
-from . import models, validations, marshmallow
+from . import models, validations, team_marshmallow
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from player.models import Player
 from flask import make_response, jsonify, request
 from config import db
 from user.models import User
-from user.marshmallow import UserSchema
+from user.user_marshmallow import UserSchema
 from auth.permissions import account_activation_required
 from .api_model import pick_squad_model, team_api, manage_team_model, transfer_model, fantasy_cards_model
 from werkzeug.exceptions import BadRequest
@@ -69,18 +69,26 @@ class ManageTeam(Resource):
         lineup = user_obj.squad.filter_by(lineup=True).all()
         bench = user_obj.squad.filter_by(lineup=False).all()
         if len(lineup) == 11 and len(bench) == 4:
+            lineup_result = []
+            for element in lineup:
+                player = Player.query.filter_by(id=element.player_id).first()
+                lineup_result.append(player)
+            bench_result = []
+            for element in bench:
+                player = Player.query.filter_by(id=element.player_id).first()
+                bench_result.append(player)
             lineup_response = PlayerSchema(many=True)
-            lineup_response = lineup_response.dump(lineup)
+            lineup_response = lineup_response.dump(lineup_result)
             for player in lineup_response:
                 player['in_lineup'] = True
             bench_response = PlayerSchema(many=True)
-            bench_response = bench_response.dump(bench)
+            bench_response = bench_response.dump(bench_result)
             for player in bench_response:
                 player['in_lineup'] = False
             squad = lineup_response + bench_response
             response['squad'] = squad
             user_cards = models.Fantasy_cards.query.filter_by(user_id=user_obj.id).first()
-            cards_response = marshmallow.CardsSchema()
+            cards_response = team_marshmallow.CardsSchema()
             cards_response = cards_response.dump(user_cards)
             response['cards'] = cards_response
             response = make_response(jsonify(response), 200)
