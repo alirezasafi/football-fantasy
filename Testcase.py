@@ -1,6 +1,6 @@
 from flask_testing import TestCase
 import unittest, os
-from config import db, mail, jwt
+from config import db, mail, jwt, ma
 from router import api
 from flask import Flask
 
@@ -8,6 +8,9 @@ from auth.api_model import auth_api
 from player.api_model import player_api
 from team.api_model import team_api
 from user.api_model import user_api
+from club.api_model import club_api
+from compeition.api_model import competition_api
+
 
 
 class AbstractTestCase(TestCase):
@@ -20,10 +23,13 @@ class AbstractTestCase(TestCase):
         db.init_app(app)
         jwt.init_app(app)
         api.init_app(app)
+        ma.init_app(app)
         api.add_namespace(auth_api, path='/auth')
         api.add_namespace(player_api, path='/player')
         api.add_namespace(team_api, path='/team')
         api.add_namespace(user_api, path='/user')
+        api.add_namespace(club_api, path='/club')
+        api.add_namespace(competition_api, path='/competition')
 
         return app
 
