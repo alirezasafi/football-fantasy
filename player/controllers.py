@@ -27,7 +27,7 @@ class MediaPlayer(Resource):
 @player_api.route('/<int:competition_id>/pick-squad')
 class CompetitionPlayers(Resource):
     @jwt_required
-    @account_activation_required
+    # @account_activation_required
     def get(self,competition_id):
         """get all players for a competition """
         competition = Competition.query.filter(Competition.id==competition_id).first()

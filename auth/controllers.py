@@ -7,7 +7,7 @@ from flask_jwt_extended import create_access_token, create_refresh_token, get_jw
 from .emailToken import confirm_registeration_token, generate_confirmation_token, send_email, generate_reset_password_token, confirm_reset_password_token
 from flask import render_template, url_for, request
 import smtplib
-from user.marshmallow import UserSchema
+from user.user_marshmallow import UserSchema
 
 @auth_api.route('/login')
 class Login(Resource):
