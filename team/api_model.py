@@ -37,7 +37,8 @@ transfer_player_model = team_api.model(
 )
 transfer_model = team_api.model(
     "Transfer", {
-        'player_in': fields.Nested(transfer_player_model, required=True)
+        'player_in': fields.Nested(transfer_player_model, required=True),
+        'player_out': fields.Nested(transfer_player_model, required=True)
     }
 )
 fantasy_cards_model = team_api.model(

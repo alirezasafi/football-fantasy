@@ -144,15 +144,15 @@ class Transfer(Resource):
             raise BadRequest(description="You cannot transfer player")
 
         user_squad_player_id = [player.player_id for player in user_squad]
-        if (player_in.id not in user_squad_player_id) or (player_out.id in user_squad_player_id):
+        if (player_in.id in user_squad_player_id) or (player_out.id not in user_squad_player_id):
             raise BadRequest(description="You cannot transfer player")
 
-        if user_obj.budget + (player_in.price - player_out.price) < 0:
+        if user_obj.budget + (player_out.price - player_in.price) < 0:
             raise BadRequest(description="your budget is not enough")
-        user_obj.budget += player_in.price - player_out.price
+        user_obj.budget += player_out.price - player_in.price
 
-        squad_obj = user_squad[user_squad_player_id.index(player_in.id)]
-        squad_obj.player_id = player_out.id
+        squad_obj = user_squad[user_squad_player_id.index(player_out.id)]
+        squad_obj.player_id = player_in.id
 
         db.session.commit()
         response = make_response(jsonify({"detail": "successfully upgraded"}), 200)
