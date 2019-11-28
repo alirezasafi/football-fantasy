@@ -2,173 +2,184 @@ from flask_restplus import Resource
 from . import models, validations, team_marshmallow
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from player.models import Player
-from flask import make_response, jsonify, request
+from flask import make_response, jsonify
 from config import db
-from user.models import User
-from user.user_marshmallow import UserSchema
 from auth.permissions import account_activation_required
 from .api_model import pick_squad_model, team_api, manage_team_model, transfer_model, fantasy_cards_model
 from werkzeug.exceptions import BadRequest
 from player.marshmallow import PlayerSchema
+from user.user_marshmallow import UserSchema
 from compeition.models import Competition
 
 
-@team_api.route('/pick-squad')
+@team_api.route('/<int:competition_id>/pick-squad')
 class PickSquad(Resource):
     @team_api.expect(pick_squad_model)
     @jwt_required
     @account_activation_required
-    def post(self):
+    def post(self, competition_id):
+        """available competitions are : Bundesliga: 2002, Eredivisie: 2003, Série A: 2013, Primera Division: 2014,
+        Ligue 1: 2015, Championship: 2016, Primeira Liga: 2017, European Championship: 2018, Serie A: 2019,
+        Premier League: 2021 """
+
+        user_schema = UserSchema()
+        user = user_schema.load(data=get_jwt_identity())
+        competition = Competition.query.filter_by(id=competition_id).first()
+        if not competition:
+            raise BadRequest(description="competition not found!!")
+
         args = team_api.payload
-        picks = args.get('squad')
-        captain_id = int(args.get('captain-id'))
-        if validations.validate_squad(picks, captain_id):
-            email = get_jwt_identity()['email']
-            user_obj = User.query.filter_by(email=email).first()
-            user_squad = user_obj.squad.all()
-            if len(user_squad) == 0:
-                players_name = [player['name'] for player in picks]
-                players_id = [player['id'] for player in picks]
-                players_obj = Player.query.filter(
-                    db.and_(Player.id.in_(players_id), Player.name.in_(players_name))).all()
+        squad_schema = team_marshmallow.SquadSchema()
+        if squad_schema.has_squad(competition_id, user.id):
+            raise BadRequest(description="your team is complete!!")
+        errors = squad_schema.validate(data=args)
+        if len(errors) != 0:
+            raise BadRequest(description=errors)
+        squad_object = squad_schema.load_object(data=args, partial=False, competition_id=competition_id,
+                                                user_id=user.id)
+        db.session.add(squad_object)
 
-                validations.validate_players(players_obj)
+        squad_player_schema = team_marshmallow.squad_playerSchema()
+        squad_player_objects = squad_player_schema.save_objects(squad_players=args['squad'], squad=squad_object,
+                                                                partial=False)
+        cards = models.Fantasy_cards(squad=squad_object)
+        db.session.add(cards)
+        db.session.add_all(squad_player_objects)
+        db.session.commit()
+        response = make_response(jsonify({"detail": "your team was successfully registered"}), 201)
+        return response
 
-                picked_players_budget = sum(player.price for player in players_obj)
-                validations.validate_budget(user_obj.budget, picked_players_budget)
-                user_obj.budget -= picked_players_budget
-                user_obj.squad_name = args.get('squad-name')
-                user_obj.captain = captain_id
 
-                for player in picks:
-                    squad_obj = models.User_Player(
-                        user_id=user_obj.id,
-                        player_id=player['id'],
-                        lineup=player['lineup']
-                    )
-                    db.session.add(squad_obj)
-                fantasy_cards = models.Fantasy_cards(user_id=user_obj.id)
-                db.session.add(fantasy_cards)
-                db.session.commit()
-                response = make_response(jsonify({"detail": "your team was successfully registered"}), 201)
-                return response
-            else:
-                raise BadRequest(description="your team is complete!!")
-
-@team_api.route('/my-team')
+@team_api.route('/<int:competition_id>/my-team')
 class ManageTeam(Resource):
     @jwt_required
     @account_activation_required
-    def get(self):
-        email = get_jwt_identity()['email']
-        user_obj = User.query.filter_by(email=email).first()
-        user_response = UserSchema(only={'username', 'budget', 'overall_point', 'squad_name'})
-        user_response = user_response.dump(user_obj)
-        response = user_response
-        response['captain-id'] = user_obj.captain
-        lineup = user_obj.squad.filter_by(lineup=True).all()
-        bench = user_obj.squad.filter_by(lineup=False).all()
-        if len(lineup) == 11 and len(bench) == 4:
-            lineup_result = []
-            for element in lineup:
-                player = Player.query.filter_by(id=element.player_id).first()
-                lineup_result.append(player)
-            bench_result = []
-            for element in bench:
-                player = Player.query.filter_by(id=element.player_id).first()
-                bench_result.append(player)
-            lineup_response = PlayerSchema(many=True)
-            lineup_response = lineup_response.dump(lineup_result)
-            for player in lineup_response:
-                player['lineup'] = True
-            bench_response = PlayerSchema(many=True)
-            bench_response = bench_response.dump(bench_result)
-            for player in bench_response:
-                player['lineup'] = False
-            squad = lineup_response + bench_response
-            response['squad'] = squad
-            user_cards = models.Fantasy_cards.query.filter_by(user_id=user_obj.id).first()
-            cards_response = team_marshmallow.CardsSchema()
-            cards_response = cards_response.dump(user_cards)
-            response['cards'] = cards_response
-            response = make_response(jsonify(response), 200)
-            return response
-        raise BadRequest(description="first pick your team")
+    def get(self, competition_id):
+        user_schema = UserSchema()
+        user = user_schema.load(data=get_jwt_identity())
+        competition = Competition.query.filter_by(id=competition_id).first()
+        if not competition:
+            raise BadRequest(description="competition not found!!")
+        squad = models.squad.query.filter(
+            db.and_(models.squad.user_id == user.id, models.squad.competition_id == competition_id)).first()
+        if not squad:
+            raise BadRequest(description="first pick your team")
+
+        response_data = {'username': user.username}
+        squad_schema = team_marshmallow.SquadSchema()
+        squad_player_schema = team_marshmallow.squad_playerSchema(many=True, only={'player_id'})
+        response_data.update(squad_schema.dump(squad))
+        lineup = squad.players.filter_by(lineup=True).all()
+        lineup = squad_player_schema.dump(lineup)
+        bench = squad.players.filter_by(lineup=False).all()
+        bench = squad_player_schema.dump(bench)
+        lineup = Player.query.filter(Player.id.in_(lineup)).all()
+        bench = Player.query.filter(Player.id.in_(bench)).all()
+        player_schema = PlayerSchema(many=True)
+        response_data['squad'] = player_schema.dump_players(lineup, True) + player_schema.dump_players(bench, False)
+        card_schema = team_marshmallow.CardsSchema(only={'triple_captain', 'free_hit', 'bench_boost', 'wild_card'})
+        response_data['cards'] = card_schema.dump(squad.cards)
+        response = make_response(response_data, 200)
+        return response
 
     @team_api.expect(manage_team_model)
     @jwt_required
     @account_activation_required
-    def put(self):
+    def put(self, competition_id):
+        user_schema = UserSchema()
+        user = user_schema.load(data=get_jwt_identity())
+        competition = Competition.query.filter_by(id=competition_id).first()
+        if not competition:
+            raise BadRequest(description="competition not found!!")
+
+        squad = models.squad.query.filter(
+            db.and_(models.squad.user_id == user.id, models.squad.competition_id == competition_id)).first()
+        if not squad:
+            raise BadRequest(description="first pick your team")
+
         args = team_api.payload
-        captain_id = int(args.get('captain-id'))
-        new_user_squad = sorted(args.get('squad'), key=lambda k: k['id'])
-        if validations.validate_squad(new_user_squad, captain_id):
-            email = get_jwt_identity()['email']
-            user_obj = User.query.filter_by(email=email).first()
-            user_squad = user_obj.squad.order_by(models.User_Player.player_id).all()
+        squad_schema = team_marshmallow.SquadSchema(partial=True)
+        errors = squad_schema.validate(data=args)
+        if len(errors) != 0:
+            raise BadRequest(description=errors)
 
-            players_name = [player['name'] for player in new_user_squad]
-            players_id = [player['id'] for player in new_user_squad]
-            players_obj = Player.query.filter(db.and_(Player.id.in_(players_id), Player.name.in_(players_name))).all()
-
-            validations.validate_players(players_obj)
-            for i in range(15):
-                if players_id[i] == user_squad[i].player_id:
-                    user_squad[i].lineup = new_user_squad[i]['lineup']
-                else:
-                    raise BadRequest(description="Your selected players do not exist in squad")
-
-            user_obj.captain = captain_id
-            db.session.commit()
-            response = make_response(jsonify({"detail": "successfully upgraded"}), 200)
-            return response
+        squad_player_schema = team_marshmallow.squad_playerSchema()
+        new_squad_players = sorted(args.get('squad'), key=lambda k: k['id'])
+        squad_players = squad.players.order_by(models.squad_player.player_id).all()
+        squad_player_schema.save_objects(new_squad_players=new_squad_players, partial=True, squad_players=squad_players)
+        squad.captain = args.get('captain')
+        db.session.commit()
+        response = make_response(jsonify({"detail": "successfully upgraded"}), 200)
+        return response
 
 
-@team_api.route('/my-team/transfer')
+@team_api.route('/<int:competition_id>/my-team/transfer')
 class Transfer(Resource):
     @team_api.expect(transfer_model)
     @jwt_required
     @account_activation_required
-    def post(self):
+    def post(self, competition_id):
         args = team_api.payload
-        player_in = Player.query.filter(db.and_(Player.name == args.get('player_in')['name'],
-                                                Player.id == args.get('player_in')['id'])).first()
-        player_out = Player.query.filter(db.and_(Player.name == args.get('player_out')['name'],
-                                                 Player.id == args.get('player_out')['id'])).first()
-        validations.validate_transfer_player(player_in, player_out)
-        email = get_jwt_identity()['email']
-        user_obj = User.query.filter_by(email=email).first()
-        user_squad = user_obj.squad.all()
+        if 'player_in' not in args.keys() or 'player_out' not in args.keys():
+            raise BadRequest(description="BAD REQUEST")
+        user_schema = UserSchema()
+        user = user_schema.load(data=get_jwt_identity())
+        competition = Competition.query.filter_by(id=competition_id).first()
+        if not competition:
+            raise BadRequest(description="competition not found!!")
 
-        if len(user_squad) != 15:
-            raise BadRequest(description="You cannot transfer player")
+        squad = models.squad.query.filter(
+            db.and_(models.squad.user_id == user.id, models.squad.competition_id == competition_id)).first()
+        if not squad:
+            raise BadRequest(description="first pick your team")
 
-        user_squad_player_id = [player.player_id for player in user_squad]
-        if (player_in.id in user_squad_player_id) or (player_out.id not in user_squad_player_id):
-            raise BadRequest(description="You cannot transfer player")
+        player_out = args.get('player_out')
+        player_in = args.get('player_in')
+        player_in_obj = Player.query.filter(db.and_(Player.name == player_in['name'],Player.id == player_in['id'])).first()
+        player_out_obj = Player.query.filter(db.and_(Player.name == player_out['name'], Player.id == player_out['id'])).first()
+        player_out = squad.players.filter_by(player_id=player_out['id']).first()
 
-        if user_obj.budget + (player_out.price - player_in.price) < 0:
+        if not player_out or not player_out_obj or not player_in_obj:
+            raise BadRequest(description="BAD REQUEST")
+        if player_out_obj.position != player_in_obj.position:
+            raise BadRequest(description="You cannot transfer players with different position!!")
+
+        if squad.players.filter_by(player_id=player_in['id']).first():
+
+            raise BadRequest(description="this player is in your team.")
+
+        if squad.budget + (player_out_obj.price - player_in_obj.price) < 0:
             raise BadRequest(description="your budget is not enough")
-        user_obj.budget += player_out.price - player_in.price
-
-        squad_obj = user_squad[user_squad_player_id.index(player_out.id)]
-        squad_obj.player_id = player_in.id
+        squad.budget += player_out_obj.price - player_in_obj.price
+        player_out.player_id = player_in_obj.id
 
         db.session.commit()
         response = make_response(jsonify({"detail": "successfully upgraded"}), 200)
         return response
 
 
-@team_api.route('/my-team/fantasy-cards')
+@team_api.route('/<int:competition_id>/my-team/fantasy-cards')
 class FantasyCards(Resource):
     @team_api.expect(fantasy_cards_model)
     @jwt_required
     @account_activation_required
-    def post(self):
-        email = get_jwt_identity()['email']
+    def post(self, competition_id):
         args = team_api.payload
-        user_obj = User.query.filter_by(email=email).first()
-        cards = models.Fantasy_cards.query.filter_by(user_id=user_obj.id).first()
+        if 'mode' not in args.keys() or 'card' not in args.keys():
+            raise BadRequest(description="BAD REQUEST")
+        user_schema = UserSchema()
+        user = user_schema.load(data=get_jwt_identity())
+        competition = Competition.query.filter_by(id=competition_id).first()
+        if not competition:
+            raise BadRequest(description="competition not found!!")
+
+        squad = models.squad.query.filter(
+            db.and_(models.squad.user_id == user.id, models.squad.competition_id == competition_id)).first()
+        if not squad:
+            raise BadRequest(description="first pick your team")
+
+        args = team_api.payload
+        cards = squad.cards
         if cards is None:
             raise BadRequest(description="first pick your squad")
         selected_card = str(args.get('card'))

@@ -13,10 +13,10 @@ player_model = team_api.model(
 )
 pick_squad_model = team_api.model(
     'PickSquad',{
-        'squad-name':fields.String(required=True, description='name of squad'),
-        'favorite-team':fields.String(),
+        'name':fields.String(required=True, description='name of squad'),
+        'favorite_team':fields.String(),
         'budget': fields.Float(required=True),
-        'captain-id':fields.Integer(required = True),
+        'captain':fields.Integer(required=True),
         'squad':fields.List(fields.Nested(player_model), required=True, description='a list of picked players')
     }
 
@@ -25,7 +25,7 @@ pick_squad_model = team_api.model(
 manage_team_model = team_api.model(
     'ManageSquad',{
         'squad':fields.List(fields.Nested(player_model), required=True, description='a list of picked players'),
-        'captain-id':fields.Integer(required = True),
+        'captain':fields.Integer(required = True),
     }
 
 )
