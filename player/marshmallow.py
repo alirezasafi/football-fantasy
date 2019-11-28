@@ -17,3 +17,9 @@ class PlayerSchema(ma.ModelSchema):
         if obj.position.value == "Attacker":
             return "Forward"
         return obj.position.value
+
+    def dump_players(self, data, lineup):
+        players = self.dump(data, many=True)
+        for player in players:
+            player['lineup'] = lineup
+        return players
