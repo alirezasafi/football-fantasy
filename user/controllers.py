@@ -12,7 +12,6 @@ from flask_jwt_extended import create_access_token, create_refresh_token
 from auth.emailToken import generate_confirmation_token, send_email
 import smtplib
 from .user_marshmallow import UserSchema
-from team.models import User_Player,Fantasy_cards
 from .api_model import user_api
 
 @user_api.route('/<int:user_id>')
@@ -74,7 +73,7 @@ class Profile(Resource):
     def get(self):
         email = get_jwt_identity()['email']
         user_obj = User.query.filter_by(email=email).first()
-        user_response = UserSchema(only={'budget', 'id','username', 'overall_point', 'squad_name', 'email'})
+        user_response = UserSchema(only={'id', 'username', 'email'})
         user_response = user_response.dump(user_obj)
         response = make_response(jsonify(user_response), 200)
         return response
@@ -141,15 +140,16 @@ class Profile(Resource):
     @account_activation_required
     def delete(self):
         args = user_api.payload
+        if 'password' not in args.keys():
+            raise BadRequest(description="BAD REQUEST")
         password = args.get('password')
         email = get_jwt_identity()['email']
         user_obj = User.query.filter_by(email=email).first()
+        if not user_obj:
+            raise BadRequest(description="NOT FOUND")
         if check_password_hash(user_obj.password, password):
-            db.session.query(User_Player).filter_by(user_id=user_obj.id).delete()
-            db.session.query(Fantasy_cards).filter_by(user_id=user_obj.id).delete()
             db.session.delete(user_obj)
             db.session.commit()
-
             response = make_response(jsonify({'message': 'successfully deleted.'}), 200)
             return response
         else:
