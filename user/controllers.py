@@ -5,13 +5,13 @@ from config import db
 from flask_jwt_extended import jwt_required, get_jwt_identity, create_access_token
 from .permissions import admin_required
 from auth.permissions import account_activation_required
-from .api_model import user_api, delete_profile_model, update_profile_model
+from .api_model import user_api, delete_account_model, update_account_model
 from flask import make_response, jsonify, url_for, render_template
 from werkzeug.exceptions import BadRequest
 from flask_jwt_extended import create_access_token, create_refresh_token
 from auth.emailToken import generate_confirmation_token, send_email
 import smtplib
-from .user_marshmallow import UserSchema
+from .user_marshmallow import UserSchema, ProfileSchema
 from .api_model import user_api
 
 @user_api.route('/<int:user_id>')
@@ -73,12 +73,15 @@ class Profile(Resource):
     def get(self):
         email = get_jwt_identity()['email']
         user_obj = User.query.filter_by(email=email).first()
-        user_response = UserSchema(only={'id', 'username', 'email'})
-        user_response = user_response.dump(user_obj)
-        response = make_response(jsonify(user_response), 200)
+        profile_schema = ProfileSchema()
+        response = profile_schema.dump({'user': user_obj, 'squads': user_obj.squads})
+        response = make_response(response, 200)
         return response
 
-    @user_api.expect(update_profile_model)
+
+@user_api.route('/account')
+class account(Resource):
+    @user_api.expect(update_account_model)
     @jwt_required
     @account_activation_required
     def put(self):
@@ -135,7 +138,7 @@ class Profile(Resource):
         else:
             raise BadRequest(description="User already registered")
 
-    @user_api.expect(delete_profile_model)
+    @user_api.expect(delete_account_model)
     @jwt_required
     @account_activation_required
     def delete(self):
