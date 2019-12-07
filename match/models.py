@@ -7,6 +7,8 @@ from player.models import Player
 
 class Status(enum.Enum):
     FINISHED = "Finished"
+    IN_PLAY = "In Play"
+    PAUSED = "Paused"
     SCHEDULED = "Scheduled"
 
 
@@ -14,11 +16,20 @@ class PlayerPlayingStatus(enum.Enum):
     LN = "Lineup"
     BN = "Bench"
 
+
+class HomeAway(enum.Enum):
+    HOME = "Home"
+    AWAY = "Away"
+
 class MatchPlayer(db.Model):
     __tablename__='MatchPlayer'
     id = db.Column(db.Integer, primary_key=True)
     player_id = db.Column(db.Integer, db.ForeignKey(Player.id), nullable=False)
     match_id = db.Column(db.Integer, db.ForeignKey('match.id'), nullable=False)
+    player_score = db.Column(db.Integer)
+    lastUpdated = db.Column(db.DateTime)
+    minutes_played = db.Column(db.Integer)
+    home_away = db.Column(ENUM(HomeAway, name='HomeAway'))
     playerPlayingStatus = db.Column(ENUM(PlayerPlayingStatus, name="PlayerPlayingStatus"))
 
 class Match(db.Model):
@@ -32,3 +43,6 @@ class Match(db.Model):
     awayTeam = db.Column(db.Integer, db.ForeignKey(Club.id), nullable=False)
     homeTeamCaptain = db.Column(db.Integer, db.ForeignKey(Player.id), nullable=False)
     awayTeamCaptain = db.Column(db.Integer, db.ForeignKey(Player.id), nullable=False)
+    homeTeamScore = db.Column(db.Integer)
+    awayTeamScore = db.Column(db.Integer)
+    players = db.relationship('MatchPlayer', backref='match', lazy='dynamic')

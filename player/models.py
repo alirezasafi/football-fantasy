@@ -22,6 +22,8 @@ class Player(db.Model):
     price = db.Column(db.Float)
     point = db.Column(db.Integer)
     image = db.Column(db.String(100))
+    lastUpdated = db.Column(db.DateTime)
+    matches = db.relationship('MatchPlayer', backref='player', lazy='dynamic')
     shirt_number = db.Column(db.Integer)
     club_id = db.Column(db.Integer, db.ForeignKey(Club.id))
     position = db.Column(ENUM(PlayerPosition, name="playerposition"))
