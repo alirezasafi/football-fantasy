@@ -1,6 +1,6 @@
 import requests
 from flask_restplus import Resource
-from .api_model import database_population_api
+from .api_model import database_population_update_api
 from club.models import Club
 from player.models import Player
 from .database_decorators import database_empty_required
@@ -8,8 +8,10 @@ from config import db
 from flask import current_app
 from time import sleep
 import random
+import datetime
+from .globals import football_api, available_competitions
 
-@database_population_api.route('/players')
+@database_population_update_api.route('/players')
 class PopulatePlayers(Resource):
     @database_empty_required(Player)
     def get(self):
@@ -20,7 +22,7 @@ class PopulatePlayers(Resource):
         done_clubs = 1
         player_ids=[]
         for club in clubs:
-            url = 'https://api.football-data.org/v2/teams/%s' % club.id
+            url = football_api['Player'] % club.id
             headers ={}
             headers['X-Auth-Token'] =  current_app.config['SOURCE_API_SECRET_KEY']
             resp = requests.get(url=url,headers = headers)
@@ -35,8 +37,9 @@ class PopulatePlayers(Resource):
                             position = player['position'],
                             club_id = club.id,
                             status = 'C',
-                            price = random.randint(4, 11),
-                            point = random.randint(5, 43),
+                            price = 0,
+                            lastUpdated = datetime.datetime.utcnow(),
+                            point = 0,
                             image= "https://waysideschools.org/wp-content/uploads/2015/07/default-profile-pic.png"
                         )
                         player_ids.append(player['id'])
