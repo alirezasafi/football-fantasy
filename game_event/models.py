@@ -6,6 +6,7 @@ from player.models import Player
 from match.models import Match
 class EventType(enum.Enum):
     GO = 'Goal'
+    OWNGO = 'OwnGoal'
     AS = 'Assist'
     YELLOW_CARD = 'YellowCard'
     YELLOW_RED_CARD = 'YellowRedCard'
