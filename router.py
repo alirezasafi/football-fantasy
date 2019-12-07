@@ -10,7 +10,7 @@ from auth.api_model import auth_api
 from player.api_model import player_api
 from team.api_model import team_api
 from user.api_model import user_api
-from database_population.api_model import database_population_api
+from database_population.api_model import database_population_update_api
 from compeition.api_model import competition_api
 from club.api_model import club_api
 
@@ -24,6 +24,8 @@ from database_population.match_event_population_controller import PopulateMatche
 from player.controllers import MediaPlayer, CompetitionPlayers
 from compeition.controllers import CompetitionListView
 from club.controller import ClubByCompetition
+from database_population.player_score_calculator_controller import PlayerScoreCalc
+from database_population.match_event_update_controller import UpdateMatchEvents
 
 
 import os
@@ -37,7 +39,7 @@ api.add_namespace(auth_api, path='/auth')
 api.add_namespace(player_api, path='/player')
 api.add_namespace(team_api, path='/team')
 api.add_namespace(user_api, path='/user')
-api.add_namespace(database_population_api, path='/populate')
+api.add_namespace(database_population_update_api, path='/populate-update')
 api.add_namespace(competition_api, path='/competition')
 api.add_namespace(club_api, path='/club')
 
