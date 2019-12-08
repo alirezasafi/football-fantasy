@@ -3,8 +3,8 @@ from flask_restplus import Resource
 from .api_model import database_population_update_api
 from config import db
 from flask import current_app
-from match.models import Match, MatchPlayer
-from game_event.models import Event, MatchSubstitution
+from match.models import Match
+from game_event.models import Event
 from player.models import Player
 import datetime
 from .globals import football_api, available_competitions
