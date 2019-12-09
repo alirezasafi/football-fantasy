@@ -2,10 +2,13 @@ from config import db
 from user.models import User
 from player.models import Player
 from compeition.models import Competition
+from match.models import Match
+import datetime
 
 
 class squad(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    created = db.Column(db.DateTime, default =datetime.datetime.utcnow)
     competition_id = db.Column(db.Integer, db.ForeignKey(Competition.id), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey(User.id))
     name = db.Column(db.String(80), nullable=True)
@@ -14,6 +17,14 @@ class squad(db.Model):
     budget = db.Column(db.Float, default=100.0)
     players = db.relationship('squad_player', cascade="all,delete", backref='squad', lazy='dynamic')
     cards = db.relationship('Fantasy_cards', cascade="all,delete", backref='squad', uselist=False)
+
+
+class squadMatch(db.Model):
+    id = db.Column(db.Integer, primary_key = True)
+    squad_id = db.Column(db.Integer, db.ForeignKey(squad.id), nullable = False)
+    match_id = db.Column(db.Integer, db.ForeignKey(Match.id), nullable = False)
+    point = db.Column(db.Integer, default = 0)
+
 
 
 class Fantasy_cards(db.Model):
