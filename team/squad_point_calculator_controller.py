@@ -20,3 +20,15 @@ class CalculateSquadPointPerMatch(Resource):
                 db.session.add(to_insert)
             db.session.commit()
 
+
+class CalculateSquadPointOverall(Resource):
+    def get(self):
+        
+        all_squads = squad.query.all()
+        for squadd in all_squads:
+            all_squad_matches = squadMatch.query.filter(squadMatch.squad_id == squadd.id).all()
+            squad_overall_point = 0
+            for squad_match in all_squad_matches:
+                squad_overall_point += squad_match.point
+            squadd.point = squad_overall_point
+        db.session.commit()
