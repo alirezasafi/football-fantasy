@@ -14,7 +14,6 @@ football_api={
 
 
 rules = {
-    "minute"
     "upToSixtyMinutes": 1,
     "moreThanSixtyMinutes": 2,
     "DefGKGoal": 6,
