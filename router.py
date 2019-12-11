@@ -13,6 +13,7 @@ from user.api_model import user_api
 from database_population.api_model import database_population_update_api
 from compeition.api_model import competition_api
 from club.api_model import club_api
+from match.api_model import match_api
 
 
 #importing controllers
@@ -26,6 +27,8 @@ from compeition.controllers import CompetitionListView
 from club.controller import ClubByCompetition
 from database_population.player_score_calculator_controller import PlayerScoreCalc
 from database_population.match_event_update_controller import UpdateMatchEvents
+from team.squad_point_calculator_controller import CalculateSquadPoint
+from match.controllers import CurrentWeekMatches
 
 
 import os
@@ -42,6 +45,7 @@ api.add_namespace(user_api, path='/user')
 api.add_namespace(database_population_update_api, path='/populate-update')
 api.add_namespace(competition_api, path='/competition')
 api.add_namespace(club_api, path='/club')
+api.add_namespace(match_api, path='/match')
 
 #initing app
 app.config.from_pyfile('config.cfg')

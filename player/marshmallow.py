@@ -7,6 +7,7 @@ from marshmallow import fields
 class PlayerSchema(ma.ModelSchema):
     class Meta:
         model = Player
+        exclude = ('matches','events')
     position = fields.Method('get_position')
     # position = EnumField(PlayerPosition, True)
     status = EnumField(PlayerStatus, True)

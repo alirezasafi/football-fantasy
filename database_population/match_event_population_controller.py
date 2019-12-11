@@ -117,13 +117,13 @@ class PopulateMatchesEvents(Resource):
             competition_id=match['competition']['id'],
             utcDate=match['utcDate'],
             status=match['status'],
-            homeTeam=match['homeTeam']['id'],
-            awayTeam=match['awayTeam']['id'],
+            homeTeam_id=match['homeTeam']['id'],
+            awayTeam_id=match['awayTeam']['id'],
             homeTeamScore=match.get('score').get('fullTime').get('homeTeam'),
             awayTeamScore=match.get('score').get('fullTime').get('awayTeam'),
             lastUpdated=match['lastUpdated'],
-            homeTeamCaptain=match['homeTeam']['captain']['id'],
-            awayTeamCaptain=match['awayTeam']['captain']['id'],
+            homeTeamCaptain_id=match['homeTeam']['captain']['id'],
+            awayTeamCaptain_id=match['awayTeam']['captain']['id'],
         )
         db.session.add(match_to_insert)
         events = PopulateMatchesEvents.get_match_events(match)
@@ -146,7 +146,7 @@ class PopulateMatchesEvents(Resource):
             url = football_api['MatchEvent'] % competition
             headers = {}
             headers['X-Auth-Token'] = current_app.config['SOURCE_API_SECRET_KEY']
-            resp = requests.get(url, headers=headers)
+            resp = requests.get(url, headers=headers, verify = False)
             matches = resp.json()['data']
 
             for match in matches:
