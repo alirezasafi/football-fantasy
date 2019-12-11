@@ -52,7 +52,7 @@ class UpdateMatchEvents(Resource):
             url = football_api["MatchEvent"] % competition
             headers = {}
             headers['X-Auth-Token'] = current_app.config['SOURCE_API_SECRET_KEY']
-            resp = requests.get(url, headers=headers)
+            resp = requests.get(url, headers=headers, verify=False)
             matches = resp.json()['data']
             for match in matches:
                 # if the match is in the database already
