@@ -26,6 +26,7 @@ from compeition.controllers import CompetitionListView
 from club.controller import ClubByCompetition
 from database_population.player_score_calculator_controller import PlayerScoreCalc
 from database_population.match_event_update_controller import UpdateMatchEvents
+from team.squad_point_calculator_controller import CalculateSquadPoint
 
 
 import os
