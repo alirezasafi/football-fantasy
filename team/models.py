@@ -14,9 +14,15 @@ class squad(db.Model):
     name = db.Column(db.String(80), nullable=True)
     captain = db.Column(db.Integer, db.ForeignKey(Player.id))
     point = db.Column(db.Integer, default=0)
+    point_lastUpdated = db.Column(db.DateTime, default = datetime.datetime.utcnow())
     budget = db.Column(db.Float, default=100.0)
     players = db.relationship('squad_player', cascade="all,delete", backref='squad', lazy='dynamic')
     cards = db.relationship('Fantasy_cards', cascade="all,delete", backref='squad', uselist=False)
+#squad listener that updates the point last joined when point is changed
+@db.event.listens_for(squad.point, 'set')
+def after_update(target, value, oldvalue, initiator):
+    if oldvalue != value:
+        target.point_lastUpdated = datetime.datetime.utcnow()
 
 
 class squadMatch(db.Model):
@@ -42,3 +48,11 @@ class squad_player(db.Model):
     squad_id = db.Column(db.Integer, db.ForeignKey(squad.id), nullable=False)
     player_id = db.Column(db.Integer, db.ForeignKey(Player.id), nullable=False)
     lineup = db.Column(db.Boolean, nullable=False)
+    joined_date = db.Column(db.DateTime, default = datetime.datetime.utcnow())
+
+#listener that updates the last joined
+@db.event.listens_for(squad_player.player_id, 'set')
+def after_update(target, value, oldvalue, initiator):
+    squad_player_table = squad_player.__table__
+    if oldvalue != value:
+        target.joined_date = datetime.datetime.utcnow()
