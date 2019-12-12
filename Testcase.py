@@ -10,6 +10,8 @@ from team.api_model import team_api
 from user.api_model import user_api
 from club.api_model import club_api
 from compeition.api_model import competition_api
+from match.api_model import match_api
+from statistics.api_model import statistics_api
 
 
 
@@ -30,6 +32,8 @@ class AbstractTestCase(TestCase):
         api.add_namespace(user_api, path='/user')
         api.add_namespace(club_api, path='/club')
         api.add_namespace(competition_api, path='/competition')
+        api.add_namespace(match_api, path='/match')
+        api.add_namespace(statistics_api, path='/statistics')
 
         return app
 
