@@ -8,7 +8,7 @@ from .api_model import player_api
 from auth.permissions import account_activation_required
 from flask_jwt_extended import jwt_required
 from compeition.models import Competition
-from .marshmallow import PlayerSchema
+from .player_marshmallow import PlayerSchema
 
 
 @player_api.route('/media/player/<path:path>')

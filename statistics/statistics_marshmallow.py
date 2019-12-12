@@ -1,9 +1,9 @@
 from config import ma
 from marshmallow import Schema, fields
-from player.marshmallow import PlayerSchema
+from player.player_marshmallow import PlayerSchema
 from club.club_marshmallow import ClubSchema
 from game_event.marshmallow import EventSchema
-from match.marshmallow import MatchSchema, Match_PlayerSchema
+from match.match_marshmallow import MatchSchema, Match_PlayerSchema
 from club.models import Club
 from flask import jsonify
 

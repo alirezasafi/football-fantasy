@@ -8,7 +8,7 @@ from config import db
 from auth.permissions import account_activation_required
 from .api_model import pick_squad_model, team_api, manage_team_model, transfer_model, fantasy_cards_model
 from werkzeug.exceptions import BadRequest
-from player.marshmallow import PlayerSchema
+from player.player_marshmallow import PlayerSchema
 from user.user_marshmallow import UserSchema
 from marshmallow import ValidationError
 

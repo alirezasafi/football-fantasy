@@ -1,7 +1,7 @@
 from config import ma
 from .models import Event, EventType
 from marshmallow_enum import EnumField
-from player.marshmallow import PlayerSchema
+from player.player_marshmallow import PlayerSchema
 
 
 class EventSchema(ma.ModelSchema):
