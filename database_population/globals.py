@@ -23,5 +23,6 @@ rules = {
     "redCard": -3,
     "assist": 3,
     "ownGoal": -2,
-    "cleanSheet": 4
+    "cleanSheet": 4,
+    "AdditionalTransfer": 5
 }

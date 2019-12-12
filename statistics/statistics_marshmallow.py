@@ -21,7 +21,7 @@ class Match_player_detail_Schema(Match_PlayerSchema):
         return str(obj.match.utcDate)
 
     def get_opponent(self, obj):
-        if obj.home_away == "Home":
+        if obj.home_away.value == "Home":
             return Club.query.filter_by(id=obj.match.awayTeam).first().name
         return Club.query.filter_by(id=obj.match.homeTeam).first().name
 

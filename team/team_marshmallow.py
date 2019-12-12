@@ -1,8 +1,9 @@
 from config import ma, db
 from . import models
-from marshmallow import fields, Schema, validates_schema, post_dump, INCLUDE
+from marshmallow import fields, Schema, validates_schema, post_dump, INCLUDE, validates
 from werkzeug.exceptions import BadRequest
 from player.models import Player
+from .models import CardStatus, CardsType, CardsCategory
 
 
 class squad_playerSchema(Schema):
@@ -122,14 +123,23 @@ class SquadSchema(Schema):
         # print(clubs_obj)
 
 
-class CardsSchema(ma.ModelSchema):
-    bench_boost = fields.Method('get_bench_boost')
-    free_hit = fields.Method('get_free_hit')
-    triple_captain = fields.Method('get_triple_captain')
-    wild_card = fields.Method('get_wild_card')
+class CardSchema(Schema):
+    card = fields.String(required=True, load_only=True)
+    mode = fields.String(required=True, load_only=True)
+    bench_boost = fields.Method('get_bench_boost', dump_only=True)
+    free_hit = fields.Method('get_free_hit', dump_only=True)
+    triple_captain = fields.Method('get_triple_captain', dump_only=True)
+    wild_card = fields.Method('get_wild_card', dump_only=True)
 
-    class Meta:
-        model = models.Fantasy_cards
+    @validates("mode")
+    def validate_mode(self, value):
+        if value != CardStatus.active.name and value != CardStatus.inactive.name:
+            raise BadRequest("BAD REQUEST (mode)!!")
+
+    @validates("card")
+    def validate_card(self, value):
+        if value not in CardsType.__members__.keys():
+            raise BadRequest("BAD REQUEST (card)!!")
 
     def get_bench_boost(self, obj):
         card_status = {0: 'inactive', 1: 'active', -1: 'used'}
@@ -146,3 +156,17 @@ class CardsSchema(ma.ModelSchema):
     def get_wild_card(self, obj):
         card_status = {0: 'inactive', 1: 'active', -1: 'used'}
         return card_status[obj.wild_card]
+
+    def active_permission(self, cards, to_active):
+        if cards.__getattribute__(to_active) == -1:
+            raise BadRequest("you used this card")
+
+        cards_status = [cards.bench_boost, cards.free_hit, cards.triple_captain, cards.wild_card]
+        if cards_status.count(1) != 0:
+            raise BadRequest("Only one card can be activated in a single Gameweek.")
+
+    def inactive_permission(self, cards, to_inactive):
+        if to_inactive in CardsCategory.transfer_cards.value:
+            raise BadRequest("failed to inactive.")
+        if cards.__getattribute__(to_inactive) == -1:
+            raise BadRequest("you used this card")
