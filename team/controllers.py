@@ -1,5 +1,6 @@
 from flask_restplus import Resource
-from . import models, validations, team_marshmallow
+from . import models, team_marshmallow
+from compeition import permissions
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from player.models import Player
 from flask import make_response, jsonify
@@ -9,7 +10,7 @@ from .api_model import pick_squad_model, team_api, manage_team_model, transfer_m
 from werkzeug.exceptions import BadRequest
 from player.marshmallow import PlayerSchema
 from user.user_marshmallow import UserSchema
-from compeition.models import Competition
+from marshmallow import ValidationError
 
 
 @team_api.route('/<int:competition_id>/pick-squad')
@@ -17,6 +18,7 @@ class PickSquad(Resource):
     @team_api.expect(pick_squad_model)
     @jwt_required
     @account_activation_required
+    @permissions.has_competition
     def post(self, competition_id):
         """available competitions are : Bundesliga: 2002, Eredivisie: 2003, Série A: 2013, Primera Division: 2014,
         Ligue 1: 2015, Championship: 2016, Primeira Liga: 2017, European Championship: 2018, Serie A: 2019,
@@ -24,9 +26,6 @@ class PickSquad(Resource):
 
         user_schema = UserSchema()
         user = user_schema.load(data=get_jwt_identity())
-        competition = Competition.query.filter_by(id=competition_id).first()
-        if not competition:
-            raise BadRequest(description="competition not found!!")
 
         args = team_api.payload
         squad_schema = team_marshmallow.SquadSchema()
@@ -54,12 +53,10 @@ class PickSquad(Resource):
 class ManageTeam(Resource):
     @jwt_required
     @account_activation_required
+    @permissions.has_competition
     def get(self, competition_id):
         user_schema = UserSchema()
         user = user_schema.load(data=get_jwt_identity())
-        competition = Competition.query.filter_by(id=competition_id).first()
-        if not competition:
-            raise BadRequest(description="competition not found!!")
         squad = models.squad.query.filter(
             db.and_(models.squad.user_id == user.id, models.squad.competition_id == competition_id)).first()
         if not squad:
@@ -77,7 +74,7 @@ class ManageTeam(Resource):
         bench = Player.query.filter(Player.id.in_(bench)).all()
         player_schema = PlayerSchema(many=True)
         response_data['squad'] = player_schema.dump_players(lineup, True) + player_schema.dump_players(bench, False)
-        card_schema = team_marshmallow.CardsSchema(only={'triple_captain', 'free_hit', 'bench_boost', 'wild_card'})
+        card_schema = team_marshmallow.CardSchema()
         response_data['cards'] = card_schema.dump(squad.cards)
         response = make_response(response_data, 200)
         return response
@@ -85,12 +82,10 @@ class ManageTeam(Resource):
     @team_api.expect(manage_team_model)
     @jwt_required
     @account_activation_required
+    @permissions.has_competition
     def put(self, competition_id):
         user_schema = UserSchema()
         user = user_schema.load(data=get_jwt_identity())
-        competition = Competition.query.filter_by(id=competition_id).first()
-        if not competition:
-            raise BadRequest(description="competition not found!!")
 
         squad = models.squad.query.filter(
             db.and_(models.squad.user_id == user.id, models.squad.competition_id == competition_id)).first()
@@ -118,15 +113,13 @@ class Transfer(Resource):
     @team_api.expect(transfer_model)
     @jwt_required
     @account_activation_required
+    @permissions.has_competition
     def post(self, competition_id):
         args = team_api.payload
         if 'player_in' not in args.keys() or 'player_out' not in args.keys():
             raise BadRequest(description="BAD REQUEST")
         user_schema = UserSchema()
         user = user_schema.load(data=get_jwt_identity())
-        competition = Competition.query.filter_by(id=competition_id).first()
-        if not competition:
-            raise BadRequest(description="competition not found!!")
 
         squad = models.squad.query.filter(
             db.and_(models.squad.user_id == user.id, models.squad.competition_id == competition_id)).first()
@@ -150,6 +143,7 @@ class Transfer(Resource):
 
         if squad.budget + (player_out_obj.price - player_in_obj.price) < 0:
             raise BadRequest(description="your budget is not enough")
+        self.apply_rules(squad)
         squad.budget += player_out_obj.price - player_in_obj.price
         player_out.player_id = player_in_obj.id
 
@@ -157,59 +151,67 @@ class Transfer(Resource):
         response = make_response(jsonify({"detail": "successfully upgraded"}), 200)
         return response
 
+    def apply_rules(self, squad):
+        cards = squad.cards
+        from database_population.globals import rules
+        if cards.wild_card == 1:  # active
+            return
+        elif squad.free_transfer is True or squad.free_transfer is None:
+            squad.free_transfer = False
+        elif squad.free_transfer is False:
+            if squad.point - rules['AdditionalTransfer'] < 0:
+                raise BadRequest("points not enough.")
+            squad.point -= rules['AdditionalTransfer']
 
-@team_api.route('/<int:competition_id>/my-team/fantasy-cards')
+
+@team_api.route('/<int:competition_id>/my-team/cards')
 class FantasyCards(Resource):
+    @jwt_required
+    @account_activation_required
+    @permissions.has_competition
+    def get(self, competition_id):
+        user_schema = UserSchema()
+        user = user_schema.load(data=get_jwt_identity())
+        squad = models.squad.query.filter(
+            db.and_(models.squad.user_id == user.id, models.squad.competition_id == competition_id)).first()
+
+        if not squad:
+            raise BadRequest(description="first pick your team")
+        card_schema = team_marshmallow.CardSchema()
+        response = card_schema.dump(squad.cards)
+        return make_response(response, 200)
+
     @team_api.expect(fantasy_cards_model)
     @jwt_required
     @account_activation_required
+    @permissions.has_competition
     def post(self, competition_id):
         args = team_api.payload
-        if 'mode' not in args.keys() or 'card' not in args.keys():
-            raise BadRequest(description="BAD REQUEST")
+        cards_schema = team_marshmallow.CardSchema()
+        try:
+            cards_schema.load(args)
+        except ValidationError as error:
+            return error.messages
         user_schema = UserSchema()
         user = user_schema.load(data=get_jwt_identity())
-        competition = Competition.query.filter_by(id=competition_id).first()
-        if not competition:
-            raise BadRequest(description="competition not found!!")
-
         squad = models.squad.query.filter(
             db.and_(models.squad.user_id == user.id, models.squad.competition_id == competition_id)).first()
         if not squad:
             raise BadRequest(description="first pick your team")
 
-        args = team_api.payload
         cards = squad.cards
-        if cards is None:
-            raise BadRequest(description="first pick your squad")
-        selected_card = str(args.get('card'))
+        card = str(args.get('card'))
         mode = str(args.get('mode'))
         if mode == 'active':
-            card_number = validations.validate_cards_active(cards, selected_card)
-            if card_number == 1:
-                cards.bench_boost = 1
-            elif card_number == 2:
-                cards.free_hit = 1
-            elif card_number == 3:
-                cards.triple_captain = 1
-            elif card_number == 4:
-                cards.wild_card = 1
+            cards_schema.active_permission(cards, card)
+            cards.__setattr__(card, 1)
             db.session.commit()
-            response = make_response(jsonify({"detail": "Successfully activated"}), 200)
+            response = make_response(jsonify({"detail": "Successfully activated."}), 200)
             return response
 
-        elif mode == 'cancel':
-            card_number = validations.validate_cards_cancel(cards, selected_card)
-            if card_number == 1:
-                cards.bench_boost = 0
-            elif card_number == 2:
-                cards.free_hit = 0
-            elif card_number == 3:
-                cards.triple_captain = 0
-            elif cards.wild_card == 4:
-                cards.wild_card = 0
+        if mode == 'inactive':
+            cards_schema.inactive_permission(cards, card)
+            cards.__setattr__(card, 0)
             db.session.commit()
-            response = make_response(jsonify({"detail": "Successfully canceled"}), 200)
+            response = make_response(jsonify({"detail": "Successfully inactivated."}), 200)
             return response
-        else:
-            raise BadRequest()
