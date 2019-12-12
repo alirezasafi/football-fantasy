@@ -43,8 +43,8 @@ transfer_model = team_api.model(
 )
 fantasy_cards_model = team_api.model(
     'FantasyCards', {
-        'card': fields.String(required=True, description="cards must be one of 'Bench Boost', 'Free Hit', 'Triple "
-                                                         "Captain', 'Wild Card'"),
-        'mode': fields.String(required=True, description="modes: 'active', 'cancel'"),
+        'card': fields.String(required=True, description="cards must be one of 'bench_boost', 'free_hit', 'triple_"
+                                                         "captain', 'wild_card'"),
+        'mode': fields.String(required=True, description="modes: 'active', 'inactive'"),
     }
 )

@@ -4,6 +4,7 @@ from player.models import Player
 from compeition.models import Competition
 from match.models import Match
 import datetime
+import enum
 
 
 class squad(db.Model):
@@ -15,6 +16,7 @@ class squad(db.Model):
     captain = db.Column(db.Integer, db.ForeignKey(Player.id))
     point = db.Column(db.Integer, default=0)
     budget = db.Column(db.Float, default=100.0)
+    free_transfer = db.Column(db.Boolean, default=True)
     players = db.relationship('squad_player', cascade="all,delete", backref='squad', lazy='dynamic')
     cards = db.relationship('Fantasy_cards', cascade="all,delete", backref='squad', uselist=False)
 
@@ -42,3 +44,21 @@ class squad_player(db.Model):
     squad_id = db.Column(db.Integer, db.ForeignKey(squad.id), nullable=False)
     player_id = db.Column(db.Integer, db.ForeignKey(Player.id), nullable=False)
     lineup = db.Column(db.Boolean, nullable=False)
+
+
+class CardStatus(enum.Enum):
+    active = "1"
+    inactive = "0"
+    used = "-1"
+
+
+class CardsType(enum.Enum):
+    bench_boost = "bench_boost"
+    free_hit = "free_hit"
+    triple_captain = "triple_captain"
+    wild_card = "wild_card"
+
+
+class CardsCategory(enum.Enum):
+    transfer_cards = ["wild_card", "free_hit"]
+    score_cards = ["bench_boost", "triple_captain"]
