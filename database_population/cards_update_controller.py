@@ -7,7 +7,7 @@ from player.models import Player
 from config import db
 
 
-@database_population_update_api.route('/card-score-calculator')
+@database_population_update_api.route('/card-update')
 class UpdateCards(Resource):
     @jwt_required
     @admin_required
@@ -19,14 +19,14 @@ class UpdateCards(Resource):
                 if cards.__getattribute__(card) == 1:
                     self.update_score(card, squad_obj)
                     cards.__setattr__(card, -1)
-                    print("squad {} was applied.".format(squad_obj.id))
+                    print("squad {} applied.".format(squad_obj.id))
                     break
             for card in CardsCategory.transfer_cards.value:
                 if cards.__getattribute__(card) == 1:
                     cards.__setattr__(card, -1)
 
         db.session.commit()
-        return {'message': 'All players scores got updated.'}, 200
+        return {'message': 'All cards got updated.'}, 200
 
     def update_score(self, card, squad_obj):
         if card == CardsType.bench_boost.value:

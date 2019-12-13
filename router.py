@@ -29,7 +29,9 @@ from database_population.player_score_calculator_controller import PlayerScoreCa
 from database_population.match_event_update_controller import UpdateMatchEvents
 from team.squad_point_calculator_controller import CalculateSquadPoint
 from match.controllers import CurrentWeekMatches
-from statistics.controllers import PlayerStatistics
+from database_population.cards_update_controller import UpdateCards
+from statistics.controllers import PlayerStatistics, SquadStatistics
+
 import os
 
 import logging

@@ -11,6 +11,23 @@ from werkzeug.exceptions import BadRequest
 from player.player_marshmallow import PlayerSchema
 from user.user_marshmallow import UserSchema
 from marshmallow import ValidationError
+from functools import wraps
+
+
+def get_squad_or_400(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        user_schema = UserSchema()
+        user = user_schema.load(data=get_jwt_identity())
+        competition_id = kwargs['competition_id']
+        squad_obj = models.squad.query.filter(
+            db.and_(models.squad.user_id == user.id, models.squad.competition_id == competition_id)).first()
+        if not squad_obj:
+            raise BadRequest(description="first pick your team")
+        kwargs['squad'] = squad_obj
+        kwargs['user'] = user
+        return f(*args, **kwargs)
+    return decorated_function
 
 
 @team_api.route('/<int:competition_id>/pick-squad')

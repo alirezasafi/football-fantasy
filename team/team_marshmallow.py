@@ -115,7 +115,7 @@ class SquadSchema(Schema):
         if kwargs['partial'] is False:
             picked_players_price = sum(player.price for player in players_obj)
             budget = data['budget']
-            if int(picked_players_price) not in range(0, 100) or int(budget) not in range(0, 100):
+            if int(picked_players_price) not in range(0, 101) or int(budget) not in range(0, 101):
                 raise BadRequest(description="Your budget is not enough!!")
 
         # for club in players_club:
