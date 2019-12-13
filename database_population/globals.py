@@ -6,9 +6,9 @@ available_competitions = [
 ]
 
 football_api={
-    "Areas":"https://api.football-data.org/v2/areas",
-    "CompetitionClub":"https://api.football-data.org/v2/competitions/%s/teams",#gets competition id 
-    "MatchEvent":"https://data-ui.football-data.org/fd/competitions/%s/matches",#gets competition id 
+    "Area":"https://api.football-data.org/v2/areas",
+    "CompetitionClub":"https://api.football-data.org/v2/competitions/%s/teams",#gets competition id
+    "MatchEvent":"https://data-ui.football-data.org/fd/competitions/%s/matches",#gets competition id
     "Player":"https://api.football-data.org/v2/teams/%s"#gets club id
 }
 
