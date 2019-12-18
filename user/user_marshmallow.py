@@ -29,7 +29,7 @@ class UserSquadSchema(ma.TableSchema):
         return competition_schema.dump(competition)
 
     def get_captain(self, obj):
-        from player.marshmallow import PlayerSchema
+        from player.player_marshmallow import PlayerSchema
         captain = Player.query.filter_by(id=obj.captain).first()
         captain_schema = PlayerSchema(only={'name', 'image', 'point', 'position', 'price', 'shirt_number', 'status'})
         return captain_schema.dump(captain)

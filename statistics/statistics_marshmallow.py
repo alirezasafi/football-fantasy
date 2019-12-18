@@ -7,7 +7,7 @@ from match.match_marshmallow import MatchSchema, Match_PlayerSchema
 from club.models import Club
 from match.models import Match, MatchPlayer, Status
 from config import db
-from game_event.models import Event
+from game_event.models import Event, EventImage
 
 
 class Match_player_detail_Schema(Match_PlayerSchema):
@@ -23,13 +23,24 @@ class Match_player_detail_Schema(Match_PlayerSchema):
         return str(obj.match.utcDate)
 
     def get_opponent(self, obj):
+        opponent = {}
         if obj.home_away.value == "Home":
-            return Club.query.filter_by(id=obj.match.awayTeam_id).first().name
-        return Club.query.filter_by(id=obj.match.homeTeam_id).first().name
+            opponent_obj = Club.query.filter_by(id=obj.match.awayTeam_id).first()
+            opponent['name'] = opponent_obj.name
+            opponent['image'] = opponent_obj.image
+            return opponent
+        opponent_obj = Club.query.filter_by(id=obj.match.homeTeam_id).first()
+        opponent['name'] = opponent_obj.name
+        opponent['image'] = opponent_obj.image
+        return opponent
 
 
 class CustomEventSchema(EventSchema):
     event_opponent = fields.Method('get_opponent')
+    image = fields.Method('get_image')
+
+    def get_image(self, obj):
+        return EventImage.__getattr__(obj.event_type.name).value
 
     def get_opponent(self, obj):
         homeTeam_name = obj.match.homeTeam.name
