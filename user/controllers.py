@@ -13,6 +13,7 @@ from auth.emailToken import generate_confirmation_token, send_email
 import smtplib
 from .user_marshmallow import UserSchema, ProfileSchema
 from .api_model import user_api
+from werkzeug.exceptions import NotFound
 
 @user_api.route('/<int:user_id>')
 class UserView(Resource):
@@ -66,20 +67,22 @@ class UserListView(Resource):
         return {'users': output}, 200
 
 
-@user_api.route('/profile')
+@user_api.route('/profile', endpoint="profile")
 class Profile(Resource):
     @jwt_required
     # @account_activation_required
     def get(self):
         email = get_jwt_identity()['email']
         user_obj = User.query.filter_by(email=email).first()
+        if not user_obj:
+            raise NotFound(description="user not found!!")
         profile_schema = ProfileSchema()
         response = profile_schema.dump({'user': user_obj, 'squads': user_obj.squads})
         response = make_response(response, 200)
         return response
 
 
-@user_api.route('/account')
+@user_api.route('/account', endpoint="account")
 class account(Resource):
     @user_api.expect(update_account_model)
     @jwt_required
