@@ -10,7 +10,7 @@ from flask import url_for
 from compeition.models import Competition
 from player.player_marshmallow import PlayerSchema, PlayerPosition
 import random
-
+from .models import CardsType, CardStatus
 clubs = ['arsenal', 'chelsea', 'bournemouth', 'brighton', 'everton', 'liverpool', 'city', 'butnley']
 
 
@@ -258,6 +258,197 @@ class TestManageTeam(AbstractTestCase):
         competition_not_found = self.client.get(url_for('manage_team', **query_p), headers=headers)
         self.assertTrue(competition_not_found.json.get('message'))
         self.assert404(competition_not_found)
+
+
+class TestFantasyCards(AbstractTestCase):
+    def test_get_competition_not_found(self):
+        user = self.creat_user(is_confirmed=True)
+        access_token = self.create_user_access_token(user=user)
+        headers = {'Authorization': 'Bearer ' + access_token}
+        query_p = {'competition_id': 200}
+        competition_not_found_response = self.client.get(url_for('cards', **query_p), headers=headers)
+        self.assert404(competition_not_found_response)
+        self.assertTrue(competition_not_found_response.json.get('message'))
+
+    def test_get_squad_not_found(self):
+        user = self.creat_user(is_confirmed=True)
+        access_token = self.create_user_access_token(user=user)
+        headers = {'Authorization': 'Bearer ' + access_token}
+        competition = self.create_competition()
+        query_p = {'competition_id': competition.id}
+        squad_not_found_response = self.client.get(url_for('cards', **query_p), headers=headers)
+        self.assert400(squad_not_found_response)
+        self.assertTrue(squad_not_found_response.json.get('message'))
+
+    def test_get_successful(self):
+        user = self.creat_user(is_confirmed=True)
+        access_token = self.create_user_access_token(user=user)
+        headers = {'Authorization': 'Bearer ' + access_token}
+        competition = self.create_competition()
+        squad_obj = self.create_squad(user=user, competition=competition)
+        query_p = {'competition_id': competition.id}
+        successful_response = self.client.get(url_for('cards', **query_p), headers=headers)
+        self.assertTrue(successful_response.json.get('bench_boost'))
+        self.assertTrue(successful_response.json.get('free_hit'))
+        self.assertTrue(successful_response.json.get('triple_captain'))
+        self.assertTrue(successful_response.json.get('wild_card'))
+        self.assert200(successful_response)
+
+    def test_put_active_successful(self):
+        user = self.creat_user(is_confirmed=True)
+        access_token = self.create_user_access_token(user=user)
+        headers = {'Authorization': 'Bearer ' + access_token}
+        competition = self.create_competition()
+        squad_obj = self.create_squad(user=user, competition=competition)
+        query_p = {'competition_id': competition.id}
+        # active bench boost
+        data = {'card': CardsType.bench_boost.name, 'mode': CardStatus.active.name}
+        successful_response = self.client.post(url_for('cards', **query_p), headers=headers, json=data)
+        self.assert200(successful_response)
+        self.assertTrue(successful_response.json.get('detail') == "Successfully activated.")
+        self.inactive_card(data['card'], squad_obj)
+
+        # active free hit
+        data['card'] = CardsType.free_hit.name
+        successful_response = self.client.post(url_for('cards', **query_p), headers=headers, json=data)
+        self.assert200(successful_response)
+        self.assertTrue(successful_response.json.get('detail') == "Successfully activated.")
+        self.inactive_card(data['card'], squad_obj)
+
+        # active wild card
+        data['card'] = CardsType.wild_card.name
+        successful_response = self.client.post(url_for('cards', **query_p), headers=headers, json=data)
+        self.assert200(successful_response)
+        self.assertTrue(successful_response.json.get('detail') == "Successfully activated.")
+        self.inactive_card(data['card'], squad_obj)
+
+        # active triple captain
+        data['card'] = CardsType.triple_captain.name
+        successful_response = self.client.post(url_for('cards', **query_p), headers=headers, json=data)
+        self.assert200(successful_response)
+        self.assertTrue(successful_response.json.get('detail') == "Successfully activated.")
+
+    def test_put_inactive_successful(self):
+        user = self.creat_user(is_confirmed=True)
+        access_token = self.create_user_access_token(user=user)
+        headers = {'Authorization': 'Bearer ' + access_token}
+        competition = self.create_competition()
+        squad_obj = self.create_squad(user=user, competition=competition)
+        query_p = {'competition_id': competition.id}
+
+        # inactive bench boost
+        data = {'card': CardsType.bench_boost.name, 'mode': CardStatus.inactive.name}
+        self.active_card(data['card'], squad_obj)
+        successful_response = self.client.post(url_for('cards', **query_p), headers=headers, json=data)
+        self.assert200(successful_response)
+        self.assertTrue(successful_response.json.get('detail') == "Successfully inactivated.")
+
+        # inactive triple captain
+        data['card'] = CardsType.triple_captain.name
+        self.active_card(data['card'], squad_obj)
+        successful_response = self.client.post(url_for('cards', **query_p), headers=headers, json=data)
+        self.assert200(successful_response)
+        self.assertTrue(successful_response.json.get('detail') == "Successfully inactivated.")
+
+    def test_active_used_card(self):
+        user = self.creat_user(is_confirmed=True)
+        access_token = self.create_user_access_token(user=user)
+        headers = {'Authorization': 'Bearer ' + access_token}
+        competition = self.create_competition()
+        squad_obj = self.create_squad(user=user, competition=competition)
+        query_p = {'competition_id': competition.id}
+
+        # active bench boost
+        data = {'card': CardsType.bench_boost.name, 'mode': CardStatus.active.name}
+        self.use_card(data['card'], squad_obj)
+        used_card_error_response = self.client.post(url_for('cards', **query_p), headers=headers, json=data)
+        self.assert400(used_card_error_response)
+        self.assertTrue(used_card_error_response.json.get('message') == "you used this card")
+        self.inactive_card(data['card'], squad_obj)
+
+        # active free hit
+        data['card'] = CardsType.free_hit.name
+        self.use_card(data['card'], squad_obj)
+        used_card_error_response = self.client.post(url_for('cards', **query_p), headers=headers, json=data)
+        self.assert400(used_card_error_response)
+        self.assertTrue(used_card_error_response.json.get('message') == "you used this card")
+        self.inactive_card(data['card'], squad_obj)
+
+        # active wild card
+        data['card'] = CardsType.wild_card.name
+        self.use_card(data['card'], squad_obj)
+        used_card_error_response = self.client.post(url_for('cards', **query_p), headers=headers, json=data)
+        self.assert400(used_card_error_response)
+        self.assertTrue(used_card_error_response.json.get('message') == "you used this card")
+        self.inactive_card(data['card'], squad_obj)
+
+        # active triple captain
+        data['card'] = CardsType.triple_captain.name
+        self.use_card(data['card'], squad_obj)
+        used_card_error_response = self.client.post(url_for('cards', **query_p), headers=headers, json=data)
+        self.assert400(used_card_error_response)
+        self.assertTrue(used_card_error_response.json.get('message') == "you used this card")
+
+    def test_inactive_used_card(self):
+        user = self.creat_user(is_confirmed=True)
+        access_token = self.create_user_access_token(user=user)
+        headers = {'Authorization': 'Bearer ' + access_token}
+        competition = self.create_competition()
+        squad_obj = self.create_squad(user=user, competition=competition)
+        query_p = {'competition_id': competition.id}
+
+        # inactive bench boost
+        data = {'card': CardsType.bench_boost.name, 'mode': CardStatus.inactive.name}
+        self.use_card(data['card'], squad_obj)
+        used_card_error_response = self.client.post(url_for('cards', **query_p), headers=headers, json=data)
+        self.assert400(used_card_error_response)
+        self.assertTrue(used_card_error_response.json.get('message') == "you used this card")
+
+        # inactive triple captain
+        data['card'] = CardsType.triple_captain.name
+        self.use_card(data['card'], squad_obj)
+        used_card_error_response = self.client.post(url_for('cards', **query_p), headers=headers, json=data)
+        self.assert400(used_card_error_response)
+        self.assertTrue(used_card_error_response.json.get('message') == "you used this card")
+
+    def test_active_two_card(self):
+        user = self.creat_user(is_confirmed=True)
+        access_token = self.create_user_access_token(user=user)
+        headers = {'Authorization': 'Bearer ' + access_token}
+        competition = self.create_competition()
+        squad_obj = self.create_squad(user=user, competition=competition)
+        query_p = {'competition_id': competition.id}
+        data = {'card': CardsType.bench_boost.name, 'mode': CardStatus.active.name}
+        # active free hit and active bench boost
+        self.active_card(CardsType.free_hit.name, squad_obj)
+        error_response = self.client.post(url_for('cards', **query_p), headers=headers, json=data)
+        self.assert400(error_response)
+        self.assertTrue(error_response.json.get('message') == "Only one card can be activated in a single "
+                                                                       "Gameweek.")
+        self.inactive_card(data['card'], squad_obj)
+
+    def test_inactive_transfer_card(self):
+        user = self.creat_user(is_confirmed=True)
+        access_token = self.create_user_access_token(user=user)
+        headers = {'Authorization': 'Bearer ' + access_token}
+        competition = self.create_competition()
+        squad_obj = self.create_squad(user=user, competition=competition)
+        query_p = {'competition_id': competition.id}
+
+        # inactive free hit
+        data = {'card': CardsType.free_hit.name, 'mode': CardStatus.inactive.name}
+        self.active_card(data['card'], squad_obj)
+        error_response = self.client.post(url_for('cards', **query_p), headers=headers, json=data)
+        self.assert400(error_response)
+        self.assertTrue(error_response.json.get('message') == "failed to inactive.")
+
+        # inactive wild card
+        data['card'] = CardsType.wild_card.name
+        self.active_card(data['card'], squad_obj)
+        error_response = self.client.post(url_for('cards', **query_p), headers=headers, json=data)
+        self.assert400(error_response)
+        self.assertTrue(error_response.json.get('message') == "failed to inactive.")
+
 
 if  __name__ == '__main__':
     unittest.main()
