@@ -222,5 +222,42 @@ class TestPickSquad(AbstractTestCase):
         self.assertTrue(pick_again_response.json.get('message') == "your team is complete!!")
 
 
+
+class TestManageTeam(AbstractTestCase):
+    def test_get_successful(self):
+        user = self.creat_user(is_confirmed=True)
+        access_token = self.create_user_access_token(user=user)
+        headers = {'Authorization': 'Bearer ' + access_token}
+        competition = self.create_competition()
+        squad_obj = self.create_squad(user=user, competition=competition)
+        query_p = {'competition_id': competition.id}
+        successful_response = self.client.get(url_for('manage_team', **query_p), headers=headers)
+        self.assertTrue(successful_response.json.__contains__('budget'))
+        self.assertTrue(successful_response.json.__contains__('captain'))
+        self.assertTrue(successful_response.json.__contains__('cards'))
+        self.assertTrue(successful_response.json.__contains__('squad'))
+        self.assertTrue(successful_response.json.__contains__('name'))
+        self.assertTrue(successful_response.json.__contains__('username'))
+        self.assert200(successful_response)
+
+    def test_get_squad_not_found(self):
+        user = self.creat_user(is_confirmed=True)
+        access_token = self.create_user_access_token(user=user)
+        competition = self.create_competition()
+        headers = {'Authorization': 'Bearer ' + access_token}
+        query_p = {'competition_id': competition.id}
+        squad_not_found_response = self.client.get(url_for('manage_team', **query_p), headers=headers)
+        self.assert400(squad_not_found_response)
+        self.assertTrue(squad_not_found_response.json.get('message'))
+
+    def test_get_competition_not_found(self):
+        user = self.creat_user(is_confirmed=True)
+        access_token = self.create_user_access_token(user=user)
+        headers = {'Authorization': 'Bearer ' + access_token}
+        query_p = {'competition_id': 200}
+        competition_not_found = self.client.get(url_for('manage_team', **query_p), headers=headers)
+        self.assertTrue(competition_not_found.json.get('message'))
+        self.assert404(competition_not_found)
+
 if  __name__ == '__main__':
     unittest.main()
