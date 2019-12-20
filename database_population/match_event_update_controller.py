@@ -4,7 +4,7 @@ from .api_model import database_population_update_api
 from config import db
 from flask import current_app
 from match.models import Match
-from game_event.models import Event
+from game_event.models import Event, MatchSubstitution
 from player.models import Player
 import datetime
 from .globals import football_api, available_competitions
@@ -22,6 +22,7 @@ class UpdateMatchEvents(Resource):
         return needsUpdate
 
     def update_match_event(self, to_update, match):
+        all_players_id = [player.id for player in Player.query.all()]
         # first update the match
         to_update.utcDate = match['utcDate']
         to_update.status = match['status']
@@ -33,15 +34,25 @@ class UpdateMatchEvents(Resource):
 
         # get all match events
         events = PopulateMatchesEvents.get_match_events(match)
+        # get all match subs
+        subs = PopulateMatchesEvents.get_match_substitutions(match)
         # get all events from database
-        dbEvents = Event.query.filter(
-            Match.id == match['id']).all()
+        dbEvents = Event.query.filter(Event.match_id == to_update.id).all()
+        # get all substitutions from database
+        dbSubs = MatchSubstitution.query.filter(MatchSubstitution.match_id == to_update.id).all()
         # delete all pervious events
         for event in dbEvents:
             db.session.delete(event)
+        #delete all subs
+        for sub in dbSubs:
+            db.session.delete(sub)
         # add all new events
         for event in events:
-            db.session.add(event)
+            if event.player_id in all_players_id:
+                db.session.add(event)
+        for sub in subs:
+            if sub.player_id in all_players_id:
+                db.session.add(sub)
         db.session.commit()
 
     def get(self):
@@ -67,9 +78,8 @@ class UpdateMatchEvents(Resource):
                         continue
                 else:
                     # insert match players and events
-                    if len(match['homeTeam']['lineup']) == 0:
-                        continue
-                    if match['homeTeam']['captain']['id'] not in all_players_id or match['awayTeam']['captain']['id'] not in all_players_id or match['status'] == 'POSTPONED':
+
+                    if match.get('status')!="SCHEDULED" and (match.get('homeTeam').get('captain').get('id') not in all_players_id or match.get('awayTeam').get('captain').get('id') not in all_players_id or match['status'] == 'POSTPONED'):
                         continue
                     PopulateMatchesEvents.insert_match_event(match)
             print("%d is done from %d competitions"%(available_competitions.index(competition)+1, len(available_competitions)))
