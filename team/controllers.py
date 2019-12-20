@@ -30,7 +30,7 @@ def get_squad_or_400(f):
     return decorated_function
 
 
-@team_api.route('/<int:competition_id>/pick-squad')
+@team_api.route('/<int:competition_id>/pick-squad', endpoint="pick-squad")
 class PickSquad(Resource):
     @team_api.expect(pick_squad_model)
     @jwt_required
@@ -66,7 +66,7 @@ class PickSquad(Resource):
         return response
 
 
-@team_api.route('/<int:competition_id>/my-team')
+@team_api.route('/<int:competition_id>/my-team', endpoint="manage_team")
 class ManageTeam(Resource):
     @jwt_required
     @account_activation_required
@@ -181,7 +181,7 @@ class Transfer(Resource):
             squad.point -= rules['AdditionalTransfer']
 
 
-@team_api.route('/<int:competition_id>/my-team/cards')
+@team_api.route('/<int:competition_id>/my-team/cards', endpoint="cards")
 class FantasyCards(Resource):
     @jwt_required
     @account_activation_required
