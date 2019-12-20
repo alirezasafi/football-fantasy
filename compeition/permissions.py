@@ -1,6 +1,6 @@
 from functools import wraps
 from .models import Competition
-from werkzeug.exceptions import BadRequest
+from werkzeug.exceptions import NotFound
 
 
 def has_competition(f):
@@ -9,6 +9,6 @@ def has_competition(f):
         competition_id = kwargs['competition_id']
         competition = Competition.query.filter_by(id=competition_id).first()
         if not competition:
-            raise BadRequest(description="competition not found!!")
+            raise NotFound(description="competition not found!!")
         return f(*args, **kwargs)
     return decorated_function
