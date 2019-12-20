@@ -11,8 +11,9 @@ from .globals import rules
 @database_population_update_api.route('/player-score-calculate')
 class PlayerScoreCalc(Resource):
     def get(self):
+
         """ calculate the player score for every match based on events and matches"""
-        all_matches = Match.query.all()
+        all_matches = Match.query.filter(Match.status == 'FINISHED').all()
         match_counter = 1
         for match in all_matches:
             # get all players played in that match
@@ -39,6 +40,8 @@ class PlayerScoreCalc(Resource):
                         minutes_played = 90 - int(substitution.minute)
                     else:
                         minutes_played = int(substitution.minute)
+                if minutes_played == 0:
+                    continue
                 # adding minutes_played to player
                 matchplayer.minutes_played = minutes_played
                 # score calculating by minutes
