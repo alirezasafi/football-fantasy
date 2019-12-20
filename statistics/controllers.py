@@ -12,7 +12,7 @@ from team.team_marshmallow import squad_playerSchema
 from player.models import Player
 
 
-@statistics_api.route('/player/<int:player_id>')
+@statistics_api.route('/player/<int:player_id>', endpoint='player_statistic')
 class PlayerStatistics(Resource):
     def get(self, player_id):
         player = Player.query.filter_by(id=player_id).first()
@@ -32,7 +32,7 @@ class PlayerStatistics(Resource):
         return response, 200
 
 
-@statistics_api.route('/squad/<int:competition_id>')
+@statistics_api.route('/squad/<int:competition_id>', endpoint="squad_statistic")
 class SquadStatistics(Resource):
     @jwt_required
     @account_activation_required
