@@ -125,5 +125,47 @@ class TestProfile(AbstractTestCase):
         self.assertTrue(user_not_found_response.json.get('message'))
 
 
+class TestAccount(AbstractTestCase):
+    def test_delete_successful(self):
+        user = self.creat_user(password="1234", is_confirmed=True)
+        access_token = self.create_user_access_token(user=user)
+        headers = {'Authorization': 'Bearer ' + access_token}
+        delete_successful_response = self.client.delete(url_for('account'), headers=headers, json=dict(password='1234'))
+        self.assert200(delete_successful_response)
+        self.assertTrue(delete_successful_response.json.get('message'))
+
+    def test_delete_user_not_found(self):
+        access_token = create_access_token(
+            identity={
+                "id": 12,
+                "username": "asas",
+                'is_admin': False,
+                'email': "asas@gmail.com",
+                'is_confirmed': True
+            }
+        )
+        headers = {'Authorization': 'Bearer ' + access_token}
+        user_not_found_response = self.client.delete(url_for('account'), headers=headers, json=dict(password="1234"))
+        self.assert404(user_not_found_response)
+        self.assertTrue(user_not_found_response.json.get('message'))
+
+    def test_delete_password_incorrect(self):
+        user = self.creat_user(password="12345", is_confirmed=True)
+        access_token = self.create_user_access_token(user=user)
+        headers = {'Authorization': 'Bearer ' + access_token}
+        password_incorrect_response = self.client.delete(url_for('account'), headers=headers, json=dict(password='1234'))
+        self.assert400(password_incorrect_response)
+        self.assertTrue(password_incorrect_response.json.get('message'))
+
+    def test_delete_password_not_send(self):
+        user = self.creat_user(password="12345", is_confirmed=True)
+        access_token = self.create_user_access_token(user=user)
+        headers = {'Authorization': 'Bearer ' + access_token}
+        password_incorrect_response = self.client.delete(url_for('account'), headers=headers,
+                                                         json={})
+        self.assert400(password_incorrect_response)
+        self.assertTrue(password_incorrect_response.json.get('message'))
+
+
 if __name__ == "__main__":
     unittest.main()

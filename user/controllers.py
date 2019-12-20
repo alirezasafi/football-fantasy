@@ -152,7 +152,7 @@ class account(Resource):
         email = get_jwt_identity()['email']
         user_obj = User.query.filter_by(email=email).first()
         if not user_obj:
-            raise BadRequest(description="NOT FOUND")
+            raise NotFound(description="NOT FOUND")
         if check_password_hash(user_obj.password, password):
             db.session.delete(user_obj)
             db.session.commit()
