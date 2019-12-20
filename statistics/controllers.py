@@ -32,7 +32,7 @@ class PlayerStatistics(Resource):
         return response, 200
 
 
-@statistics_api.route('/squad/<int:competition_id>')
+@statistics_api.route('/squad/<int:competition_id>', endpoint="squad_statistic")
 class SquadStatistics(Resource):
     @jwt_required
     @account_activation_required
