@@ -31,6 +31,7 @@ from team.squad_point_calculator_controller import CalculateSquadPoint
 from match.controllers import CurrentWeekMatches
 from database_population.cards_update_controller import UpdateCards
 from statistics.controllers import PlayerStatistics, SquadStatistics
+from database_population.club_update_controller import UpdateClub
 
 import os
 

@@ -14,54 +14,53 @@ from .globals import available_competitions, football_api
 class PopulateMatchesEvents(Resource):
 
     @staticmethod
+    def get_match_substitutions(match):
+        subs = []
+        for substitution in match.get('substitutions'):
+            sub_to_insert = MatchSubstitution(
+                minute=substitution.get('minute'),
+                player_in_id=substitution.get('playerIn').get('id'),
+                player_out_id=substitution.get('playerOut').get('id'),
+                match_id=match.get('id')
+            )
+            subs.append(sub_to_insert)
+        return subs
+    @staticmethod
     def get_match_events(match):
-        all_players_id = [player.id for player in Player.query.all()]
         events = []
         for goal in match.get('goals'):
-            if goal['scorer']['id'] in all_players_id:
-                if goal['type'] == "OWN":
-                    event_to_insert = Event(
-                        minute=goal['minute'],
-                        player_id=goal['scorer']['id'],
-                        event_type="OWNGO",
-                        match_id=match['id']
-                    )
-                else:
-                    event_to_insert = Event(
-                        minute=goal['minute'],
-                        player_id=goal['scorer']['id'],
-                        event_type="GO",
-                        match_id=match['id']
-                    )
-                events.append(event_to_insert)
+            if goal['type'] == "OWN":
+                event_to_insert = Event(
+                    minute=goal['minute'],
+                    player_id=goal['scorer']['id'],
+                    event_type="OWNGO",
+                    match_id=match['id']
+                )
+            else:
+                event_to_insert = Event(
+                    minute=goal['minute'],
+                    player_id=goal['scorer']['id'],
+                    event_type="GO",
+                    match_id=match['id']
+                )
+            events.append(event_to_insert)
             if goal.get('assist') != None:
-                if goal['assist']['id'] in all_players_id:
-                    event_to_insert = Event(
-                        minute=goal['minute'],
-                        player_id=goal['assist']['id'],
-                        event_type="AS",
-                        match_id=match['id']
-                    )
-                    events.append(event_to_insert)
+                event_to_insert = Event(
+                    minute=goal['minute'],
+                    player_id=goal['assist']['id'],
+                    event_type="AS",
+                    match_id=match['id']
+                )
+                events.append(event_to_insert)
 
         for card in match.get('bookings'):
-            if card['player']['id'] in all_players_id:
-                event_to_insert = Event(
-                    minute=card['minute'],
-                    player_id=card['player']['id'],
-                    event_type=card['card'],
-                    match_id=match['id']
-                )
-                events.append(event_to_insert)
-        for substitution in match.get('substitutions'):
-            if substitution['playerIn']['id'] in all_players_id and substitution['playerOut']['id'] in all_players_id:
-                event_to_insert = MatchSubstitution(
-                    minute=substitution['minute'],
-                    player_in_id=substitution['playerIn']['id'],
-                    player_out_id=substitution['playerOut']['id'],
-                    match_id=match['id']
-                )
-                events.append(event_to_insert)
+            event_to_insert = Event(
+                minute=card['minute'],
+                player_id=card['player']['id'],
+                event_type=card['card'],
+                match_id=match['id']
+            )
+            events.append(event_to_insert)
         return events
 
     @staticmethod
@@ -112,28 +111,36 @@ class PopulateMatchesEvents(Resource):
         return players
     @staticmethod
     def insert_match_event(match):
+        # all_players_id = [player.id for player in Player.query.all()]
+        all_players = Player.query
+        
         match_to_insert = Match(
             id=match['id'],
-            competition_id=match['competition']['id'],
-            utcDate=match['utcDate'],
-            status=match['status'],
-            homeTeam_id=match['homeTeam']['id'],
-            awayTeam_id=match['awayTeam']['id'],
+            competition_id=match.get('competition').get('id'),
+            utcDate=match.get('utcDate'),
+            status=match.get('status'),
+            homeTeam_id=match.get('homeTeam').get('id'),
+            awayTeam_id=match.get('awayTeam').get('id'),
             homeTeamScore=match.get('score').get('fullTime').get('homeTeam'),
             awayTeamScore=match.get('score').get('fullTime').get('awayTeam'),
-            lastUpdated=match['lastUpdated'],
-            homeTeamCaptain_id=match['homeTeam']['captain']['id'],
-            awayTeamCaptain_id=match['awayTeam']['captain']['id'],
+            lastUpdated=match.get('lastUpdated'),
+            homeTeamCaptain_id=match.get('homeTeam').get('captain').get('id'),
+            awayTeamCaptain_id=match.get('awayTeam').get('captain').get('id'),
         )
         db.session.add(match_to_insert)
+        subs = PopulateMatchesEvents.get_match_substitutions(match)
         events = PopulateMatchesEvents.get_match_events(match)
         players = PopulateMatchesEvents.get_match_players(match)
         for event in events:
-            db.session.add(event)
+            if all_players.filter(Player.id == event.player_id).first():
+                db.session.add(event)
+        for sub in subs:
+            if all_players.filter(Player.id == sub.player_out_id).first() and all_players.filter(Player.id == sub.player_in_id).first():
+                db.session.add(sub)
         for player in players:
-            db.session.add(player)
+            if all_players.filter(Player.id == player.player_id).first():
+                db.session.add(player)
         db.session.commit()
-        return
         
 
     @database_empty_required(Match)
@@ -150,10 +157,14 @@ class PopulateMatchesEvents(Resource):
             matches = resp.json()['data']
 
             for match in matches:
-                if len(match['homeTeam']['lineup']) == 0:
+                # if match.get('status') == 'SCHEDULED':
+
+                # if len(match['homeTeam']['lineup']) == 0:
+                #     continue
+
+                if match.get('status')!="SCHEDULED" and (match.get('homeTeam').get('captain').get('id') not in all_players_id or match.get('awayTeam').get('captain').get('id') not in all_players_id or match['status'] == 'POSTPONED'):
                     continue
-                if match['homeTeam']['captain']['id'] not in all_players_id or match['awayTeam']['captain']['id'] not in all_players_id or match['status'] == 'POSTPONED':
-                    continue
+
                 PopulateMatchesEvents.insert_match_event(match)
 
             print("remaining competitions: %s" %
