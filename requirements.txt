@@ -13,3 +13,4 @@ requests
 flask-marshmallow
 marshmallow-sqlalchemy
 marshmallow_enum
+nose
