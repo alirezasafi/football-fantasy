@@ -26,8 +26,8 @@ class AbstractTestCase(TestCase):
         self.file_path = os.path.abspath(os.getcwd())+"/database.db"
         app = Flask(__name__)
         app.config.from_pyfile('test_config.cfg')
-        # app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///'+self.file_path
-        app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:se23571113@localhost/SE_TEST'
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///'+self.file_path
+        # app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:se23571113@postgres/se_test'
         mail.init_app(app)
         db.init_app(app)
         jwt.init_app(app)
