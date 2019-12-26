@@ -51,7 +51,7 @@ class UpdateMatchEvents(Resource):
             if event.player_id in all_players_id:
                 db.session.add(event)
         for sub in subs:
-            if sub.player_id in all_players_id:
+            if sub.player_in_id in all_players_id and sub.player_out_id in all_players_id:
                 db.session.add(sub)
         db.session.commit()
 
