@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, cli
 from config import db, api, jwt, mail, ma
 from user.controllers import UserView, UserListView
 from auth.controllers import Login, Register, RegisterConfirmation, ResetPasswordConfirmation, ResetPassword
@@ -65,6 +65,9 @@ with app.app_context():
 
 
 CORS(app)#, resources={r"/*": {"origins": "*"}})
+
+the_cli = cli.FlaskGroup(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
+app.config['SWAGGER_BASEPATH'] = '/contacts'
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", debug=True)
+    the_cli()

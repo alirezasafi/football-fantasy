@@ -2,9 +2,12 @@ version: '3'
 services:
     web:
         build: .
+        command: gunicorn --bind 0.0.0.0:5000 manage:app
         restart: always
-        ports:
-            - "5000:5000"
+        # ports:
+        #     - "5000:5000"
+        expose:
+            - 5000
         links:
             - postgres:postgres
     postgres:
@@ -18,3 +21,9 @@ services:
         - ./postgresData/:/var/lib/postgresql/data
         ports:
         - "5432:5432"
+    nginx:
+        build: ./nginx
+        ports:
+            - 1337:80
+        depends_on:
+            - web
