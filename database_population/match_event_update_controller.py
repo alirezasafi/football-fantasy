@@ -25,12 +25,22 @@ class UpdateMatchEvents(Resource):
         all_players_id = [player.id for player in Player.query.all()]
         # first update the match
         to_update.utcDate = match['utcDate']
-        to_update.status = match['status']
         to_update.homeTeamScore = match.get('score').get(
             'fullTime').get('homeTeam')
         to_update.awayTeamScore = match.get('score').get(
             'fullTime').get('awayTeam')
         to_update.lastUpdated=match['lastUpdated']
+        
+        #if the match was scheduled more update is needed
+        if to_update.status.name == "SCHEDULED":
+            to_update.homeTeamCaptain_id = match.get('homeTeam').get('captain').get('id')
+            to_update.awayTeamCaptain_id = match.get('awayTeam').get('captain').get('id')
+            players = PopulateMatchesEvents.get_match_players(match)
+            for player in players:
+                if player.player_id in all_players_id:
+                    db.session.add(player)
+        
+        to_update.status = match.get("status")
 
         # get all match events
         events = PopulateMatchesEvents.get_match_events(match)
