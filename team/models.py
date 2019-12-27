@@ -20,6 +20,7 @@ class squad(db.Model):
     free_transfer = db.Column(db.Boolean, default=True)
     players = db.relationship('squad_player', cascade="all,delete", backref='squad', lazy='dynamic')
     cards = db.relationship('Fantasy_cards', cascade="all,delete", backref='squad', uselist=False)
+    competition = db.relationship("Competition", foreign_keys=[competition_id])
 #squad listener that updates the point last joined when point is changed
 @db.event.listens_for(squad.point, 'set')
 def after_update(target, value, oldvalue, initiator):
