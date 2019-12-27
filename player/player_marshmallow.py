@@ -2,6 +2,7 @@ from config import ma
 from .models import Player, PlayerPosition, PlayerStatus
 from marshmallow_enum import EnumField
 from marshmallow import fields
+from club.club_marshmallow import ClubSchema
 
 
 class PlayerSchema(ma.ModelSchema):
@@ -11,6 +12,7 @@ class PlayerSchema(ma.ModelSchema):
     position = fields.Method('get_position')
     # position = EnumField(PlayerPosition, True)
     status = EnumField(PlayerStatus, True)
+    club = ma.Nested(ClubSchema())
     
     def get_position(self, obj):
         if obj.position == None:
