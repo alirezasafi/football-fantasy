@@ -4,6 +4,9 @@ from marshmallow import fields, Schema, validates_schema, post_dump, INCLUDE, va
 from werkzeug.exceptions import BadRequest
 from player.models import Player
 from .models import CardStatus, CardsType, CardsCategory
+from user.user_marshmallow import UserSchema
+from compeition.competition_marshmallow import CompetitionSchema
+from player.player_marshmallow import PlayerEventSchema
 
 
 class squad_playerSchema(Schema):
@@ -170,3 +173,16 @@ class CardSchema(Schema):
             raise BadRequest("failed to inactive.")
         if cards.__getattribute__(to_inactive) == -1:
             raise BadRequest("you used this card")
+
+
+class LeaderBoard(ma.ModelSchema):
+    class Meta:
+        model = models.squad
+        fields = (
+            'name',
+            'competition',
+            'user',
+            'point',
+        )
+    user = ma.Nested(UserSchema())
+    competition = ma.Nested(CompetitionSchema())

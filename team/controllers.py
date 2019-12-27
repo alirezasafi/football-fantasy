@@ -232,3 +232,13 @@ class FantasyCards(Resource):
             db.session.commit()
             response = make_response(jsonify({"detail": "Successfully inactivated."}), 200)
             return response
+
+
+
+from compeition.models import club_competition
+@team_api.route("/<int:competition_id>/leaderboard")
+class LeaderBoard(Resource):
+    def get(self, competition_id):
+        squads = models.squad.query.filter(models.squad.competition_id == competition_id).order_by(models.squad.point.desc()).all()
+        output = team_marshmallow.LeaderBoard(many = True).dump(squads)
+        return{'squads':output}
