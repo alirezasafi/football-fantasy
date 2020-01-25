@@ -5,7 +5,8 @@ from player.models import Player
 from .api_model import database_population_update_api
 from config import db
 import datetime
-from .globals import rules
+from .globals import rules, player_max_price, player_min_price
+import math
 
 
 @database_population_update_api.route('/player-score-calculate')
@@ -95,7 +96,7 @@ class PlayerScoreCalc(Resource):
 @database_population_update_api.route('/player-overall-point')
 class PlayerOverallPointCalc(Resource):
     def get(self):
-        """calculate and update sum of the match points for every player if needed"""
+        """calculate and update sum of the match points and prices for every player if needed"""
         all_players = Player.query.all()
         player_counter = 1
         for player in all_players:
@@ -106,12 +107,21 @@ class PlayerOverallPointCalc(Resource):
                 if player.lastUpdated > match.lastUpdated or match.player_score == None:
                     break
                 player_point += match.player_score
+            
+            player.price = player_point/len(matches)
             player.point = player_point
             player.lastUpdated = datetime.datetime.utcnow()
             if player_counter % 250 == 0:
                 db.session.commit()
                 print(str(player_counter // 250) + " out of " + str(len(all_players)//250))
             player_counter += 1
+            
+        db.session.commit()
+        all_players_sorted_by_point = Player.query.order_by(Player.point).all()
+        max_point = all_players[0].point
+        min_point = all_players[-1].point
+        for player in all_players_sorted_by_point:
+            player.point = math.ceil(((player.point-min_point) / (max_point - min_point)) * (player_max_price - player_min_price) + player_min_price)
             
         db.session.commit()
 
