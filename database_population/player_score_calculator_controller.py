@@ -108,7 +108,8 @@ class PlayerOverallPointCalc(Resource):
                     break
                 player_point += match.player_score
             
-            player.price = player_point/len(matches)
+            if len(matches):
+                player.price = player_point/len(matches)
             player.point = player_point
             player.lastUpdated = datetime.datetime.utcnow()
             if player_counter % 250 == 0:
@@ -121,6 +122,9 @@ class PlayerOverallPointCalc(Resource):
         max_point = all_players[0].point
         min_point = all_players[-1].point
         for player in all_players_sorted_by_point:
+            matches = MatchPlayer.query.filter(MatchPlayer.player_id == player.id).all()
+            if len(matches) == 0 or not player.point:
+                continue
             player.point = math.ceil(((player.point-min_point) / (max_point - min_point)) * (player_max_price - player_min_price) + player_min_price)
             
         db.session.commit()
