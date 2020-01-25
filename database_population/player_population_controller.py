@@ -40,7 +40,7 @@ class PopulatePlayers(Resource):
                             price = 0,
                             lastUpdated = datetime.datetime.utcnow(),
                             point = 0,
-                            image= "https://waysideschools.org/wp-content/uploads/2015/07/default-profile-pic.png"
+                            image= "https://www.shareicon.net/data/256x256/2016/06/30/788946_people_512x512.png"
                         )
                         player_ids.append(player['id'])
                         db.session.add(player_to_insert)
