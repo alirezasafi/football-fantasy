@@ -15,6 +15,8 @@ football_api={
     "Player":"https://api.football-data.org/v2/teams/%s"#gets club id
 }
 
+player_max_price = 12
+player_min_price = 3
 
 rules = {
     "upToSixtyMinutes": 1,
