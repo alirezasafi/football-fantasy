@@ -16,3 +16,4 @@ marshmallow_enum
 nose
 gunicorn
 locustio
+random-username
