@@ -3,7 +3,7 @@ from .auth import RegisterTasks, LoginTasks
 from .player import CompetitionPlayerTasks
 from .team import PickSquadTasks, GetManageTeamTask, CardsTasks
 from .transfer import TransferTasks
-from .statistics import PlayerStatisticsTasks, SquadStatistics
+from .statistics import PlayerStatisticsTasks, SquadStatisticsTasks
 from .match import CurrentWMTasks, MatchDetailTasks
 from .competition import CompetitionTasks
 from .club import ClubTasks

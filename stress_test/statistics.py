@@ -21,7 +21,7 @@ class PlayerStatisticsTasks(TaskSequence):
     #     self.interrupt()
 
 
-class SquadStatistics(TaskSequence):
+class SquadStatisticsTasks(TaskSequence):
     @seq_task(1)
     @task(1)
     def competition_not_found(self):
@@ -37,7 +37,7 @@ class SquadStatistics(TaskSequence):
         token = admin_token
         headers = {"Authorization": "Bearer {}".format(token)}
         with self.client.get("/statistics/squad/2003", headers=headers, name="squad not found", catch_response=True) as response:
-            if response.status_code == 400:
+            if response.status_code == 404:
                 response.success()
 
     @seq_task(3)
