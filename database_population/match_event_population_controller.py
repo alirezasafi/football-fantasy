@@ -74,7 +74,10 @@ class PopulateMatchesEvents(Resource):
                     match_id=match['id'],
                     playerPlayingStatus='LN',
                     lastUpdated=match['lastUpdated'],
-                    home_away="HOME"
+                    home_away="HOME",
+                    minutes_played = 0,
+                    player_score = 0
+
                 )
                 players.append(match_player_to_insert)
         for match_player in match['homeTeam']['bench']:
@@ -84,7 +87,9 @@ class PopulateMatchesEvents(Resource):
                     match_id=match['id'],
                     playerPlayingStatus='BN',
                     lastUpdated=match['lastUpdated'],
-                    home_away="HOME"
+                    home_away="HOME",
+                    minutes_played = 0,
+                    player_score = 0
                 )
                 players.append(match_player_to_insert)
 
@@ -95,7 +100,9 @@ class PopulateMatchesEvents(Resource):
                     match_id=match['id'],
                     playerPlayingStatus='LN',
                     lastUpdated=match['lastUpdated'],
-                    home_away="AWAY"
+                    home_away="AWAY",
+                    minutes_played = 0,
+                    player_score = 0
                 )
                 players.append(match_player_to_insert)
         for match_player in match['awayTeam']['bench']:
@@ -105,7 +112,9 @@ class PopulateMatchesEvents(Resource):
                     match_id=match['id'],
                     playerPlayingStatus='BN',
                     lastUpdated=match['lastUpdated'],
-                    home_away="AWAY"
+                    home_away="AWAY",
+                    minutes_played = 0,
+                    player_score = 0
                 )
                 players.append(match_player_to_insert)
         return players
