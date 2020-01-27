@@ -15,6 +15,10 @@ football_api={
     "Player":"https://api.football-data.org/v2/teams/%s"#gets club id
 }
 
+premier_league_api = {
+    "premier_data": "https://fantasy.premierleague.com/api/bootstrap-static/",
+    "player_image": "https://resources.premierleague.com/premierleague/photos/players/250x250/ "
+}
 player_max_price = 12
 player_min_price = 3
 
