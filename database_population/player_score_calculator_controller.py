@@ -97,27 +97,27 @@ class PlayerScoreCalc(Resource):
 class PlayerOverallPointCalc(Resource):
     def get(self):
         """calculate and update sum of the match points and prices for every player if needed"""
-        # all_players = Player.query.all()
-        # player_counter = 1
-        # for player in all_players:
-        #     matches = MatchPlayer.query.filter(MatchPlayer.player_id == player.id).all()
-        #     player_point = player.point
-        #     for match in matches:
-        #         # if update is not needed break
-        #         if player.lastUpdated > match.lastUpdated or match.player_score == None:
-        #             break
-        #         player_point += match.player_score
+        all_players = Player.query.all()
+        player_counter = 1
+        for player in all_players:
+            matches = MatchPlayer.query.filter(MatchPlayer.player_id == player.id).all()
+            player_point = player.point
+            for match in matches:
+                # if update is not needed break
+                if player.lastUpdated > match.lastUpdated or match.player_score == None:
+                    break
+                player_point += match.player_score
             
-        #     if len(matches):
-        #         player.price = player_point/len(matches)
-        #     player.point = player_point
-        #     player.lastUpdated = datetime.datetime.utcnow()
-        #     if player_counter % 250 == 0:
-        #         db.session.commit()
-        #         print(str(player_counter // 250) + " out of " + str(len(all_players)//250))
-        #     player_counter += 1
+            if len(matches):
+                player.price = player_point/len(matches)
+            player.point = player_point
+            player.lastUpdated = datetime.datetime.utcnow()
+            if player_counter % 250 == 0:
+                db.session.commit()
+                print(str(player_counter // 250) + " out of " + str(len(all_players)//250))
+            player_counter += 1
             
-        # db.session.commit()
+        db.session.commit()
         all_players_sorted_by_point = Player.query.order_by(Player.point.desc()).all()
         max_point = all_players_sorted_by_point[0].point
         min_point = all_players_sorted_by_point[-1].point
