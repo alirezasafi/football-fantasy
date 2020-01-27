@@ -1,14 +1,14 @@
 from locust import HttpLocust, constant, TaskSequence
 from stress_test import (
     RegisterTasks, LoginTasks, CompetitionPlayerTasks, PickSquadTasks, GetManageTeamTask,
-    TransferTasks, PlayerStatisticsTasks, CurrentWMTasks, MatchDetailTasks, SquadStatistics,
+    TransferTasks, PlayerStatisticsTasks, CurrentWMTasks, MatchDetailTasks, SquadStatisticsTasks,
     ClubTasks, CompetitionTasks, ProfileTasks, CardsTasks, admin_token
 )
 
 
 class MainTasks(TaskSequence):
     tasks = [RegisterTasks, LoginTasks, CompetitionPlayerTasks, PickSquadTasks, GetManageTeamTask,
-             TransferTasks, PlayerStatisticsTasks, CurrentWMTasks, MatchDetailTasks, SquadStatistics,
+             TransferTasks, PlayerStatisticsTasks, CurrentWMTasks, MatchDetailTasks, SquadStatisticsTasks,
              ClubTasks, CompetitionTasks, ProfileTasks, CardsTasks]
 
     def teardown(self):
