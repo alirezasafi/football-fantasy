@@ -1,9 +1,12 @@
 from config import db
 import enum
 from sqlalchemy.dialects.postgresql import ENUM
-
+from match.models import MatchPlayer
 from player.models import Player
 from match.models import Match
+from database_population.calculate_event_point import calculate_event_point
+from database_population.globals import rules
+
 class EventType(enum.Enum):
     GO = 'Goal'
     OWNGO = 'OwnGoal'
@@ -26,9 +29,54 @@ class MatchSubstitution(db.Model):
     player_out_id = db.Column(db.Integer, db.ForeignKey(Player.id))
     minute = db.Column(db.Integer)
     match_id = db.Column(db.Integer, db.ForeignKey(Match.id))
+
+@db.event.listens_for(MatchSubstitution, 'before_insert')
+def player_score_update_after_substitution(mapper, connection, target):
+    player_in = target.player_in_id
+    player_out = target.player_out_id
+    player_out_minutes_played = target.minute
+    player_in_minutes_played = 90 - player_out_minutes_played
+
+    match_player_in = MatchPlayer.query.filter(db.and_(MatchPlayer.player_id == target.player_in_id, MatchPlayer.match_id == target.match_id)).first()
+    match_player_out = MatchPlayer.query.filter(db.and_(MatchPlayer.player_id == target.player_out_id, MatchPlayer.match_id == target.match_id)).first()
+
+    player_in_score = match_player_in.player_score
+    player_out_score = match_player_out.player_score
+    if player_in_minutes_played < 60 and player_in_minutes_played > 1:
+        player_in_score += rules['upToSixtyMinutes']
+    elif player_in_minutes_played >= 60:
+        player_in_score += rules['moreThanSixtyMinutes']
+    
+    if player_out_minutes_played < 60 and player_out_minutes_played > 1:
+        player_out_score += (rules['upToSixtyMinutes'] - rules['moreThanSixtyMinutes'])
+
+    connection.execute(
+        MatchPlayer.__table__.
+        update().        
+        values(player_score=player_in_score, minutes_played = player_in_minutes_played).
+        where(MatchPlayer.player_id == player_in))
+    connection.execute(
+        MatchPlayer.__table__.
+        update().        
+        values(player_score=player_out_score, minutes_played = player_out_minutes_played).
+        where(MatchPlayer.player_id == player_out))
+
+
 class Event(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     player_id = db.Column(db.Integer, db.ForeignKey(Player.id))
     event_type = db.Column(ENUM(EventType, name="event_type"))
     minute = db.Column(db.Integer)
     match_id = db.Column(db.Integer, db.ForeignKey(Match.id))
+
+@db.event.listens_for(Event, 'after_insert')
+def event_update_after_match_update(mapper, connection, target):
+    match_player = MatchPlayer.query.filter(db.and_(MatchPlayer.player_id == target.player_id, MatchPlayer.match_id == target.match_id)).first()
+    event_point = calculate_event_point(target, match_player)
+    player_score = match_player.player_score + event_point
+
+    connection.execute(
+        MatchPlayer.__table__.
+        update().        
+        values(player_score=player_score).
+        where(MatchPlayer.player_id == target.player_id))
