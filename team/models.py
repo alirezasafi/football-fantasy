@@ -2,7 +2,7 @@ from config import db
 from user.models import User
 from player.models import Player
 from compeition.models import Competition
-from match.models import Match
+from match.models import Match, MatchPlayer
 import datetime
 import enum
 
@@ -59,6 +59,28 @@ def after_update(target, value, oldvalue, initiator):
     if oldvalue != value:
         target.joined_date = datetime.datetime.utcnow()
 
+
+@db.event.listens_for(MatchPlayer.player_score, 'set')
+def after_update(target, value, oldvalue, initiator):
+    Player_table = Player.__table__
+    player = Player.query.filter(Player.id == target.player_id).first()
+    connection = db.session.connection()
+    connection.execute(
+        Player_table.
+        update().        
+        values(point=player.point + value).
+        where(Player.id == target.player_id))
+    #squad_match update
+    match = target.match
+
+    squads = squad_player.query.filter(squad_player.player_id == target.player_id).all()
+    for squadd in squads:
+        connection.execute(
+            squad.__table__.
+            update().        
+            values(point=squad.point + value).
+            where(squad.id == squadd.squad_id and squad.created > target.match.utcDate))
+        
 
 class CardStatus(enum.Enum):
     active = "1"

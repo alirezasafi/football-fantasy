@@ -4,18 +4,13 @@ services:
         build: .
         command: gunicorn --bind 0.0.0.0:5000 --workers 3 manage:app --timeout 3600
         restart: always
-        # ports:
-        #     - "5000:5000"
         expose:
             - 5000
         links:
             - postgres:postgres
     postgres:
         restart: always
-        environment:
-                POSTGRES_DB: "SE"
-                POSTGRES_PASSWORD: "se23571113"
-                POSTGRES_USER: "postgres"
+        env_file: env.env          
         image: postgres:latest
         volumes:
         - ./postgresData/:/var/lib/postgresql/data
@@ -27,3 +22,18 @@ services:
             - 1337:80
         depends_on:
             - web
+    broker:
+        image: rabbitmq:3
+        env_file: env.env
+        ports:
+            - 5672:5672
+    
+    celery:
+        command: celery -A router.celery worker ---loglevel=info
+        depends_on:
+            - broker
+
+    celery-beat:
+        command: celery -A router.celery beat ---loglevel=info
+        depends_on:
+            - broker

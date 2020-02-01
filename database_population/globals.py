@@ -5,7 +5,7 @@ available_competitions = [
     #2015, #france
     #2013, #brazil
     #2003, #nethelands
-    2002,2013,2014,2019,2021
+    2002,2014,2019,2021
 ]
 
 football_api={

@@ -75,7 +75,6 @@ class PopulateMatchesEvents(Resource):
                     playerPlayingStatus='LN',
                     lastUpdated=match['lastUpdated'],
                     home_away="HOME",
-                    minutes_played = 0,
                     player_score = 0
 
                 )
@@ -88,7 +87,6 @@ class PopulateMatchesEvents(Resource):
                     playerPlayingStatus='BN',
                     lastUpdated=match['lastUpdated'],
                     home_away="HOME",
-                    minutes_played = 0,
                     player_score = 0
                 )
                 players.append(match_player_to_insert)
@@ -101,7 +99,6 @@ class PopulateMatchesEvents(Resource):
                     playerPlayingStatus='LN',
                     lastUpdated=match['lastUpdated'],
                     home_away="AWAY",
-                    minutes_played = 0,
                     player_score = 0
                 )
                 players.append(match_player_to_insert)
@@ -113,7 +110,6 @@ class PopulateMatchesEvents(Resource):
                     playerPlayingStatus='BN',
                     lastUpdated=match['lastUpdated'],
                     home_away="AWAY",
-                    minutes_played = 0,
                     player_score = 0
                 )
                 players.append(match_player_to_insert)
@@ -140,15 +136,16 @@ class PopulateMatchesEvents(Resource):
         subs = PopulateMatchesEvents.get_match_substitutions(match)
         events = PopulateMatchesEvents.get_match_events(match)
         players = PopulateMatchesEvents.get_match_players(match)
+        for player in players:
+            if all_players.filter(Player.id == player.player_id).first():
+                db.session.add(player)
         for event in events:
             if all_players.filter(Player.id == event.player_id).first():
                 db.session.add(event)
         for sub in subs:
             if all_players.filter(Player.id == sub.player_out_id).first() and all_players.filter(Player.id == sub.player_in_id).first():
                 db.session.add(sub)
-        for player in players:
-            if all_players.filter(Player.id == player.player_id).first():
-                db.session.add(player)
+        
         db.session.commit()
         
 

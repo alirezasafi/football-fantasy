@@ -4,6 +4,8 @@ from config import db
 from compeition.models import Competition
 from club.models import Club
 from player.models import Player
+from flask_sqlalchemy import event
+from database_population.globals import rules
 
 class Status(enum.Enum):
     FINISHED = "Finished"
@@ -31,6 +33,17 @@ class MatchPlayer(db.Model):
     minutes_played = db.Column(db.Integer)
     home_away = db.Column(ENUM(HomeAway, name='HomeAway'))
     playerPlayingStatus = db.Column(ENUM(PlayerPlayingStatus, name="PlayerPlayingStatus"))
+
+
+
+@db.event.listens_for(MatchPlayer, 'before_insert')
+def set_minutes_played(mapper, connection, target):
+    target.minutes_played = 0
+    if target.playerPlayingStatus == "LN":
+        target.minutes_played = 90
+    if target.minutes_played:
+        target.player_score = rules['moreThanSixtyMinutes']
+    
 
 class Match(db.Model):
     id = db.Column(db.Integer, primary_key=True)

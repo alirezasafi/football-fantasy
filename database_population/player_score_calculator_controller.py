@@ -35,8 +35,6 @@ class PlayerScoreCalc(Resource):
                     if matchplayer.playerPlayingStatus.name == 'LN':
                         minutes_played = 90
                 else:
-                    in_out = None
-
                     if substitution.player_in_id == matchplayer.player.id:
                         minutes_played = 90 - int(substitution.minute)
                     else:
