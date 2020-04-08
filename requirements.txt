@@ -18,3 +18,4 @@ gunicorn
 locustio
 random-username
 celery
+Werkzeug==0.16.1
