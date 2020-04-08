@@ -29,11 +29,13 @@ services:
             - 5672:5672
     
     celery:
-        command: celery -A router.celery worker ---loglevel=info
+        build: .
+        command: celery -A router.celery worker --loglevel=info
         depends_on:
             - broker
 
     celery-beat:
-        command: celery -A router.celery beat ---loglevel=info
+        build: .
+        command: celery -A router.celery beat --loglevel=info
         depends_on:
             - broker
