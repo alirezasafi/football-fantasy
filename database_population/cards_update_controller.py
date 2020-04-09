@@ -6,7 +6,6 @@ from flask_jwt_extended import jwt_required
 from player.models import Player
 from config import db
 
-
 @database_population_update_api.route('/card-update')
 class UpdateCards(Resource):
     @jwt_required

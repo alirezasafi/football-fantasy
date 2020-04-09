@@ -17,5 +17,5 @@ class Competition(db.Model):
     lastUpdated = db.Column(db.DateTime)
     area_id = db.Column(db.Integer, db.ForeignKey(Area.id))
     image = db.Column(db.String(200))
-    clubs = db.relationship(Club, secondary=club_competition, lazy='subquery',
+    clubs = db.relationship(Club, secondary=club_competition, lazy='dynamic',
         backref=db.backref('competition', lazy='dynamic'))

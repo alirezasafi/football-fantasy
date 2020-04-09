@@ -14,6 +14,7 @@ from player.models import Player
 
 @statistics_api.route('/player/<int:player_id>', endpoint='player_statistic')
 class PlayerStatistics(Resource):
+    @jwt_required
     def get(self, player_id):
         player = Player.query.filter_by(id=player_id).first()
         if not player:
@@ -21,7 +22,7 @@ class PlayerStatistics(Resource):
         club = player.club
         matches = Match.query.filter(db.and_(
             db.or_(Match.awayTeam_id == club.id, Match.homeTeam_id == club.id), Match.status == Status.FINISHED.name)).\
-            order_by(Match.utcDate.desc()).limit(5).all()
+            order_by(Match.utcDate.desc()).limit(7).all()
         matches_id = [match.id for match in matches]
 
         matches_player = player.matches.filter(MatchPlayer.match_id.in_(matches_id))

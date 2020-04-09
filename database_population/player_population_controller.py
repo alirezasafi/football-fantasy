@@ -10,17 +10,21 @@ from time import sleep
 import random
 import datetime
 from .globals import football_api, available_competitions
+from user.permissions import admin_required
+from flask_jwt_extended import jwt_required
 
 @database_population_update_api.route('/players')
 class PopulatePlayers(Resource):
-    @database_empty_required(Player)
+    # @database_empty_required(Player)
+    @jwt_required
+    @admin_required
     def get(self):
         """population order : 3"""
         clubs = Club.query.all()
         if len(clubs) ==0:
             return{'message':'first populate clubs'}, 400
         done_clubs = 1
-        player_ids=[]
+        player_ids=[player.id for player in Player.query.all()]
         for club in clubs:
             url = football_api['Player'] % club.id
             headers ={}
@@ -46,7 +50,7 @@ class PopulatePlayers(Resource):
                         db.session.add(player_to_insert)
                 print('club %s is done. %s clubs remaining'%(done_clubs,len(clubs)-done_clubs))
                 done_clubs+=1
-                sleep(5)
+                sleep(7)
                 db.session.commit()
             except:
                 return {'message':resp.json()['message']}, 400

@@ -1,6 +1,4 @@
 import requests
-from flask_restplus import Resource
-from .api_model import database_population_update_api
 from config import db
 from flask import current_app
 from match.models import Match
@@ -11,8 +9,6 @@ from .globals import football_api, available_competitions
 from .match_event_population_controller import PopulateMatchesEvents
 
 
-# @database_population_update_api.route('/match-event-update')
-# class UpdateMatchEvents():
 def need_update(match, to_update):
     databaseLastUpdated = to_update.lastUpdated
     matchLastUpdated = match['lastUpdated']
