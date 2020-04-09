@@ -20,7 +20,7 @@ class PopulatePlayers(Resource):
         if len(clubs) ==0:
             return{'message':'first populate clubs'}, 400
         done_clubs = 1
-        player_ids=[]
+        player_ids=[player.id for player in Player.query.all()]
         for club in clubs:
             url = football_api['Player'] % club.id
             headers ={}
@@ -46,7 +46,7 @@ class PopulatePlayers(Resource):
                         db.session.add(player_to_insert)
                 print('club %s is done. %s clubs remaining'%(done_clubs,len(clubs)-done_clubs))
                 done_clubs+=1
-                sleep(5)
+                sleep(7)
                 db.session.commit()
             except:
                 return {'message':resp.json()['message']}, 400
