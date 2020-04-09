@@ -10,10 +10,14 @@ from time import sleep
 import random
 import datetime
 from .globals import football_api, available_competitions
+from user.permissions import admin_required
+from flask_jwt_extended import jwt_required
 
 @database_population_update_api.route('/players')
 class PopulatePlayers(Resource):
-    @database_empty_required(Player)
+    # @database_empty_required(Player)
+    @jwt_required
+    @admin_required
     def get(self):
         """population order : 3"""
         clubs = Club.query.all()

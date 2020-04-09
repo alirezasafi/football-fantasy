@@ -7,12 +7,16 @@ from .database_decorators import database_empty_required
 from config import db
 from flask import current_app
 from .globals import football_api, available_competitions
+from user.permissions import admin_required
+from flask_jwt_extended import jwt_required
 
 
 @database_population_update_api.route('/clubs-competitions')
 class PopulateClubsCompetitions(Resource):
-    @database_empty_required(Club)
-    @database_empty_required(Competition)
+    # @database_empty_required(Club)
+    # @database_empty_required(Competition)
+    @jwt_required
+    @admin_required
     def get(self):
         """population order : 2"""
         for competition in available_competitions:

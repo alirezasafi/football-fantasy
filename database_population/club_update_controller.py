@@ -6,11 +6,15 @@ from .globals import football_api, available_competitions
 from club.models import Club
 from compeition.models import Competition
 from config import db
+from user.permissions import admin_required
+from flask_jwt_extended import jwt_required
 
 
 
 @database_population_update_api.route('/club-update')
 class UpdateClub(Resource):
+    @jwt_required
+    @admin_required
     def get(self):
         """Insert clubs if new ones were added"""
         new_clubs = 0

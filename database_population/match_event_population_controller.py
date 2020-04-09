@@ -8,6 +8,8 @@ from match.models import Match, MatchPlayer
 from game_event.models import Event, MatchSubstitution
 from player.models import Player
 from .globals import available_competitions, football_api
+from user.permissions import admin_required
+from flask_jwt_extended import jwt_required
 
 
 @database_population_update_api.route('/match-event-populate')
@@ -149,8 +151,10 @@ class PopulateMatchesEvents(Resource):
         db.session.commit()
         
 
-    @database_empty_required(Match)
-    @database_empty_required(Event)
+    # @database_empty_required(Match)
+    # @database_empty_required(Event)
+    @admin_required
+    @jwt_required
     def get(self):
         """population order : 4"""
         all_players_id = [player.id for player in Player.query.all()]
