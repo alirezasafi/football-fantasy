@@ -28,7 +28,7 @@ from database_population.match_event_population_controller import PopulateMatche
 from player.controllers import MediaPlayer, CompetitionPlayers
 from compeition.controllers import CompetitionListView
 from club.controller import ClubByCompetition
-from database_population.player_score_calculator_controller import PlayerScoreCalc
+from database_population.player_score_calculator_controller import update_all_player_price
 from team.squad_point_calculator_controller import CalculateSquadPoint
 from match.controllers import CurrentWeekMatches
 from database_population.cards_update_controller import UpdateCards
@@ -98,6 +98,7 @@ celery = make_celery(app)
 @celery.task
 def update_match_event():
     perform_update()
+    update_all_player_price()
 
 
 @celery.on_after_configure.connect
