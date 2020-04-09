@@ -19,8 +19,11 @@ class CurrentWeekMatches(Resource):
         output = match_schema.dump(all_matches)
         status = 200
         if len(output) == 0:
-            status = 404
-            output = "there are no mathces available."
+            recent_matches = Match.query.filter(Match.competition_id == competition_id).all()
+            recent_matches = recent_matches[-10:]
+            # status = 404
+            # output = "there are no mathces available."
+            output = match_schema.dump(recent_matches)
         return {"Matches":output}, status
 
 
