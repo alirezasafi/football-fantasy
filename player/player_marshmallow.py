@@ -1,4 +1,5 @@
 from config import ma
+from flask import current_app
 from .models import Player, PlayerPosition, PlayerStatus
 from marshmallow_enum import EnumField
 from marshmallow import fields
@@ -10,9 +11,13 @@ class PlayerSchema(ma.ModelSchema):
         model = Player
         exclude = ('matches','events')
     position = fields.Method('get_position')
+    image = fields.Method('get_image')
     # position = EnumField(PlayerPosition, True)
     status = EnumField(PlayerStatus, True)
-    
+
+    def get_image(self, obj):
+        return "{}player/media/{}.png".format(current_app.config['DOMAIN_ADDRESS'], obj.image)
+
     def get_position(self, obj):
         if obj.position == None:
             return None
