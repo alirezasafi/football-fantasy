@@ -19,3 +19,6 @@ locustio
 random-username
 celery
 Werkzeug==0.16.1
+scrapy==2.0.1
+Pillow==7.1.1
+crochet
