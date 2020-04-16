@@ -18,6 +18,7 @@ from compeition.api_model import competition_api
 from club.api_model import club_api
 from match.api_model import match_api
 from statistics.api_model import statistics_api
+from scrap_images.api_model import scrap_api
 
 # importing controllers
 from team.controllers import PickSquad, ManageTeam
@@ -34,7 +35,7 @@ from match.controllers import CurrentWeekMatches
 from database_population.cards_update_controller import UpdateCards
 from statistics.controllers import PlayerStatistics, SquadStatistics
 from database_population.club_update_controller import UpdateClub
-from database_population.playerImage_update_controller import PopulatePremier
+from scrap_images.controllers import PremierLeague
 
 from database_population.match_event_update_controller import perform_update
 
@@ -54,6 +55,7 @@ api.add_namespace(competition_api, path='/competition')
 api.add_namespace(club_api, path='/club')
 api.add_namespace(match_api, path='/match')
 api.add_namespace(statistics_api, path='/statistics')
+api.add_namespace(scrap_api, path='/scrap_images')
 
 # initing app
 app.config.from_pyfile('config.cfg')
