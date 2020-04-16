@@ -44,7 +44,8 @@ class PopulatePlayers(Resource):
                             price = 0,
                             lastUpdated = datetime.datetime.utcnow(),
                             point = 0,
-                            image= "https://www.shareicon.net/data/256x256/2016/06/30/788946_people_512x512.png"
+                            # image= "https://www.shareicon.net/data/256x256/2016/06/30/788946_people_512x512.png"
+                            image="default.png"
                         )
                         player_ids.append(player['id'])
                         db.session.add(player_to_insert)
