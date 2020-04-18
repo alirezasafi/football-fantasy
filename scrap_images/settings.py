@@ -2,13 +2,13 @@ BOT_NAME = 'scrap_images'
 
 SPIDER_MODULES = ['scrap_images.spiders']
 NEWSPIDER_MODULE = 'scrap_images.spiders'
-DOWNLOAD_DELAY = 10
+# DOWNLOAD_DELAY = 2
 ROBOTSTXT_OBEY = True
 
-ITEM_PIPELINES = {
-    'scrap_images.pipelines.CustomImagesPipeline': 300
-}
-IMAGES_STORE = 'premier_league'
+# ITEM_PIPELINES = {
+#     'scrap_images.pipelines.CustomImagesPipeline': 300
+# }
+# IMAGES_STORE = 'premier_league'
 
 # DEFAULT_ITEM_CLASS = 'production.items'
 
