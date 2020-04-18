@@ -10,6 +10,7 @@ services:
             - postgres:postgres
         volumes:
         - ./gunicorn_socket:/tmp
+        - ./media:/app/media
     postgres:
         restart: always
         env_file: env.env          
@@ -18,12 +19,7 @@ services:
         - ./postgresData/:/var/lib/postgresql/data
         ports:
         - "5432:5432"
-#    nginx:
-#        build: ./nginx
-#        ports:
-#            - 1337:80
-#        depends_on:
-#            - web
+        
     broker:
         image: rabbitmq:3
         env_file: env.env
