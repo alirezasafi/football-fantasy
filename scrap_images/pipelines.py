@@ -4,7 +4,7 @@ from PIL import Image
 import scrapy
 
 
-class CustomImagesPipeline(ImagesPipeline):
+class PremiesLeaguePipeline(ImagesPipeline):
 
     def convert_image(self, image, size=None):
         if size:
@@ -16,9 +16,15 @@ class CustomImagesPipeline(ImagesPipeline):
         return image, buf
 
     def get_media_requests(self, item, info):
-        for image_url in item['image_urls']:
-            yield scrapy.Request(image_url)
+        yield scrapy.Request(item.get("image_urls"))
 
     def file_path(self, request, response=None, info=None):
         player_code = request.url.split('/')[-1]
+        return player_code
+
+
+class LaligaPipeline(PremiesLeaguePipeline):
+
+    def file_path(self, request, response=None, info=None):
+        player_code = request.url.split('/')[-3] + ".png"
         return player_code

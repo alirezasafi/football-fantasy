@@ -8,7 +8,7 @@ class PremiesLeagueSpider(scrapy.Spider):
         'DOWNLOAD_DELAY': 2,
         'IMAGES_STORE': 'media/premier_league',
         'ITEM_PIPELINES': {
-            'scrap_images.pipelines.CustomImagesPipeline': 300
+            'scrap_images.pipelines.PremiesLeaguePipeline': 300
         }
     }
     clubs_number = 0
@@ -23,10 +23,14 @@ class PremiesLeagueSpider(scrapy.Spider):
     def parse_clubs(self, response):
         clubs_url = response.xpath('//main[@id="mainContent"]/div[@class="clubIndex"]//li/a/@href').getall()
         clubs_name = response.xpath('//main[@id="mainContent"]/div[@class="clubIndex"]//li/a//h4[@class="clubName"]/text()').getall()
+        if len(clubs_name) != 20 and len(clubs_url) != 20:
+            print("parse clubs failed")
+            return
+
         for i in range(len(clubs_url)):
             club_url = clubs_url[i].replace('overview', 'squad')
-            self.premier_data.append(Club(name=clubs_name[i], url=club_url, players=[]))
-        for club in self.premier_data:
+            self.data.append(Club(name=clubs_name[i], url=club_url, players=[]))
+        for club in self.data:
             yield scrapy.Request(url=self.main_domain + club['url'], callback=self.parse_club, cb_kwargs=dict(club=club))
 
     def parse_club(self, response, club):
@@ -40,12 +44,12 @@ class PremiesLeagueSpider(scrapy.Spider):
                 club['players'].append(Player(name=players_name[i], code=players_code[i]))
                 yield scrapy.Request(url=self.main_domain + players_url[i], callback=self.parse_player)
 
-        if len(self.premier_data) == self.clubs_number:
-            self.premier_data.append("$")
+        if len(self.data) == self.clubs_number:
+            self.data.append("$")
             print("scrape completed.")
             print("downloading...")
 
     def parse_player(self, response):
         name = response.xpath('//main[@id="mainContent"]//div[@class="playerDetails"]/h1/div/text()').get()
         image_code = response.xpath('//main[@id="mainContent"]//div[@class="imgContainer"]/img/@data-player').get()
-        yield ImageItem(image_name=name, image_urls=[self.image_url.format(image_code)])
+        yield ImageItem(image_name=name, image_urls=self.image_url.format(image_code))
