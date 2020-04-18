@@ -9,7 +9,7 @@ from flask import render_template, url_for, request
 import smtplib
 from user.user_marshmallow import UserSchema
 
-Domain_name = "rester.ir"
+Domain_name = "https://www.rester.ir"
 
 
 @auth_api.route('/login')
