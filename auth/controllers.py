@@ -9,6 +9,9 @@ from flask import render_template, url_for, request
 import smtplib
 from user.user_marshmallow import UserSchema
 
+Domain_name = "rester.ir"
+
+
 @auth_api.route('/login')
 class Login(Resource):
     
@@ -101,7 +104,8 @@ class Register(Resource):
         # sending email
         token = generate_confirmation_token(user.email)
         confirm_url = url_for('auth_register_confirmation',
-                              token=token, _external=True)
+                              token=token)
+        confirm_url = Domain_name + confirm_url
         html = render_template('actvate_email.html', confirm_url=confirm_url)
         try:
             send_email(
