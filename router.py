@@ -35,7 +35,7 @@ from match.controllers import CurrentWeekMatches
 from database_population.cards_update_controller import UpdateCards
 from statistics.controllers import PlayerStatistics, SquadStatistics
 from database_population.club_update_controller import UpdateClub
-from scrap_images.controllers import PremierLeague
+from scrap_images.controllers import ScrapImage
 
 from database_population.match_event_update_controller import perform_update
 
