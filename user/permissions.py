@@ -7,6 +7,6 @@ def admin_required(f):
     def decorated_function(*args, **kwargs):
         is_admin = get_jwt_identity()['is_admin']
         if not is_admin:
-            return {'message': 'Only admin is privilaged.'}
+            return {'message': 'Only admin is privilaged.'}, 403
         return f(*args, **kwargs)
     return decorated_function

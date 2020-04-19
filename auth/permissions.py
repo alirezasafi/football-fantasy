@@ -10,7 +10,7 @@ def account_activation_required(f):
             is_confirmed = decodedToken.get('is_confirmed')
             email = decodedToken.get('email')
             if not is_confirmed:
-                return {"message":"Activate your account by email sent to {}".format(email)}
+                return {"message":"Activate your account by email sent to {}".format(email)}, 403
             return f(*args, **kwargs)
         else:
             return {"message":"no token is given"}

@@ -74,7 +74,7 @@ class SquadSchema(Schema):
     def validate_squad(self, data, **kwargs):
         squad = data['squad']
         captain = data['captain']
-        formations = [(4, 3, 3), (4, 4, 2), (4, 5, 1), (3, 4, 3), (3, 5, 2), (5, 4, 1)]
+        formations = [(4, 3, 3), (4, 4, 2), (4, 5, 1), (3, 4, 3), (3, 5, 2), (5, 4, 1), (5, 2, 3), (5, 3, 2)]
         position = [player['position'] for player in squad]
         lineup = [player['lineup'] for player in squad]
         if not (position.count('Goalkeeper') == 2 and position.count('Defender') == 5

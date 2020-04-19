@@ -4,6 +4,7 @@ from .models import Player, PlayerPosition, PlayerStatus
 from marshmallow_enum import EnumField
 from marshmallow import fields
 from club.club_marshmallow import ClubSchema
+from flask import request
 
 
 class PlayerSchema(ma.ModelSchema):
@@ -16,7 +17,7 @@ class PlayerSchema(ma.ModelSchema):
     status = EnumField(PlayerStatus, True)
 
     def get_image(self, obj):
-        return "{}player/media/{}.png".format(current_app.config['DOMAIN_ADDRESS'], obj.image)
+        return "{}player/media/{}.png".format(request.host_url, obj.image)
 
     def get_position(self, obj):
         if obj.position == None:

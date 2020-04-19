@@ -25,7 +25,7 @@ class ScrapImage(Resource):
         There are 20 clubs and 619 players in site https://www.premierleague.com/
         that 579 players have image.
         There are 20 clubs and 566 player in site https://www.laliga.com/ that
-        566 players have image.
+        527 players have image.
         Use this endpoint first to download the images, after that you sure all
         the images have been downloaded use it again to update database.
         """
@@ -79,7 +79,6 @@ class ScrapImage(Resource):
                     player.image = path
             db.session.commit()
             data.clear()
-            print(data)
             return {"message": "submitted image for {} players".format(
                 scraped_data_stats['players'] - len(not_found_players)),
                     'scraped_data_stats': scraped_data_stats, 'database_stats': database_stats,
