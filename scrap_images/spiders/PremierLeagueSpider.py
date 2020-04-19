@@ -42,7 +42,7 @@ class PremiesLeagueSpider(scrapy.Spider):
         if len(players_url) == len(players_code) == len(players_name):
             for i in range(len(players_name)):
                 club['players'].append(Player(name=players_name[i], code=players_code[i]))
-                yield scrapy.Request(url=self.main_domain + players_url[i], callback=self.parse_player)
+                # yield scrapy.Request(url=self.main_domain + players_url[i], callback=self.parse_player)
 
         if len(self.data) == self.clubs_number:
             self.data.append("$")

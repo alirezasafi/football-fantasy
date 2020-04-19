@@ -70,6 +70,18 @@ class SquadSchema(Schema):
                                      name=data['name'])
             return squad_obj
 
+    @validates_schema(skip_on_field_errors=False)
+    def validate_fields(self, data, **kwargs):
+        if kwargs.get("partial") is False:
+            if not data.__contains__('name'):
+                raise BadRequest(description="please specify the name of your squad.")
+            if not data.__contains__('captain'):
+                raise BadRequest(description="the captain has not been selected.")
+            if not data.__contains__('squad'):
+                raise BadRequest(description="your squad is incomplete.")
+            if data.get("squad").__contains__({}):
+                raise BadRequest(description="your squad is incomplete.")
+
     @validates_schema
     def validate_squad(self, data, **kwargs):
         squad = data['squad']

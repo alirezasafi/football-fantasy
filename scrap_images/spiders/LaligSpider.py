@@ -49,7 +49,7 @@ class LaligSpider(scrapy.Spider):
                 code = player.get("opta_id")
                 self.players_stats['have_image'] += 1
                 club['players'].append(Player(name=name, code=code))
-                yield ImageItem(image_name=name, image_urls=url)
+                # yield ImageItem(image_name=name, image_urls=url)
 
         if len(self.data) == self.clubs_number:
             self.data.append("$")
