@@ -55,8 +55,8 @@ class BundesligaSpider(scrapy.Spider):
         image_url = image_url[image_url.find('https'):-2]
         player['name'] = (str(f_name or "") + " " + str(l_name or "")).lstrip()
         player['code'] = "p{}".format(base_code + int(shirt_num or 0))
-        print("{}-parse player {} ...".format(self.player_counter, player['name']))
-        yield ImageItem(image_name=player['code'], image_url=image_url)
+        # print("{}-parse player {} ...".format(self.player_counter, player['name']))
+        # yield ImageItem(image_name=player['code'], image_url=image_url)
         if self.player_counter == 536:
             self.data.append("$")
             print("download is complete.")

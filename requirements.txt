@@ -10,7 +10,7 @@ flask-cors
 Flask-Testing
 psycopg2-binary
 requests
-flask-marshmallow
+flask-marshmallow==0.11.0
 marshmallow-sqlalchemy
 marshmallow_enum
 nose
@@ -22,4 +22,4 @@ Werkzeug==0.16.1
 scrapy==2.0.1
 Pillow==7.1.1
 crochet
-python-slugify
+awesome-slugify==1.6.5
