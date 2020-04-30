@@ -27,7 +27,7 @@ class LaligSpider(scrapy.Spider):
             print("parse clubs failed")
             return
         for i in range(len(clubs_url)):
-            self.data.append(Club(name=clubs_name[i], url=clubs_url[i], players=[]))
+            self.data.append(Club(id=i, name=clubs_name[i], url=clubs_url[i], players=[]))
         for club in self.data:
             yield scrapy.Request(url=self.main_domain + club['url'], callback=self.parse_club, cb_kwargs=dict(club=club))
 
@@ -49,7 +49,7 @@ class LaligSpider(scrapy.Spider):
                 code = player.get("opta_id")
                 self.players_stats['have_image'] += 1
                 club['players'].append(Player(name=name, code=code))
-                # yield ImageItem(image_name=name, image_urls=url)
+                # yield ImageItem(image_name=name, image_url=url)
 
         if len(self.data) == self.clubs_number:
             self.data.append("$")

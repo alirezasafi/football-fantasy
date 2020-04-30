@@ -29,7 +29,7 @@ class PremiesLeagueSpider(scrapy.Spider):
 
         for i in range(len(clubs_url)):
             club_url = clubs_url[i].replace('overview', 'squad')
-            self.data.append(Club(name=clubs_name[i], url=club_url, players=[]))
+            self.data.append(Club(id=i, name=clubs_name[i], url=club_url, players=[]))
         for club in self.data:
             yield scrapy.Request(url=self.main_domain + club['url'], callback=self.parse_club, cb_kwargs=dict(club=club))
 
@@ -52,4 +52,4 @@ class PremiesLeagueSpider(scrapy.Spider):
     def parse_player(self, response):
         name = response.xpath('//main[@id="mainContent"]//div[@class="playerDetails"]/h1/div/text()').get()
         image_code = response.xpath('//main[@id="mainContent"]//div[@class="imgContainer"]/img/@data-player').get()
-        yield ImageItem(image_name=name, image_urls=self.image_url.format(image_code))
+        yield ImageItem(image_name=name, image_url=self.image_url.format(image_code))
