@@ -5,6 +5,7 @@ from user.permissions import admin_required
 from flask_jwt_extended import jwt_required
 from compeition.models import Competition
 from scrap_images.spiders.LaligSpider import LaligSpider
+from scrap_images.spiders.Bundesliga import BundesligaSpider
 from scrap_images.spiders.PremierLeagueSpider import PremiesLeagueSpider
 from scrapy.crawler import CrawlerRunner
 from club.models import Club
@@ -26,12 +27,15 @@ class ScrapImage(Resource):
         that 579 players have image.
         There are 20 clubs and 566 player in site https://www.laliga.com/ that
         527 players have image.
+        There are 18 clubs and 536 player in site "https://www.bundesliga.com" that
+        507 players have image.
         Use this endpoint first to download the images, after that you sure all
         the images have been downloaded use it again to update database.
         """
 
         comp_detail = {2021: {'spider': PremiesLeagueSpider, 'img_path': 'premier_league/'},
-                       2014: {'spider': LaligSpider, 'img_path': 'laliga/'}}
+                       2014: {'spider': LaligSpider, 'img_path': 'laliga/'},
+                       2002: {'spider': BundesligaSpider, 'img_path': 'bundesliga/'}}
 
         scraped_data_stats = {'clubs': 0, 'players': 0}
         database_stats = {'clubs': 0, 'players': 0}
