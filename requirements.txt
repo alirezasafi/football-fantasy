@@ -15,7 +15,7 @@ marshmallow-sqlalchemy
 marshmallow_enum
 nose
 gunicorn
-locustio
+locust
 random-username
 celery
 Werkzeug==0.16.1
