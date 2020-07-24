@@ -39,7 +39,8 @@ class BundesligaSpider(scrapy.Spider):
 
     def parse_club(self, response, club):
         print("parse club {}".format(club['name']))
-        players_url = response.xpath('//body//squad-list//div[@class="playercard"]/a/@href').getall()
+        players_url = response.xpath('//*[@id="default"]/div/clubs-page/div/club-detail/article/section/squad-list/article/div/div/player-card-simple/div/a/@href').getall()
+
         base_code = 1000 + (club['id'] * 100)
         for player_url in players_url:
             player = Player(name="", code="")
@@ -56,7 +57,7 @@ class BundesligaSpider(scrapy.Spider):
         player['name'] = (str(f_name or "") + " " + str(l_name or "")).lstrip()
         player['code'] = "p{}".format(base_code + int(shirt_num or 0))
         # print("{}-parse player {} ...".format(self.player_counter, player['name']))
-        # yield ImageItem(image_name=player['code'], image_url=image_url)
+        yield ImageItem(image_name=player['code'], image_url=image_url)
         if self.player_counter == 536:
             self.data.append("$")
             print("download is complete.")
