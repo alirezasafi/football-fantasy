@@ -55,7 +55,7 @@ class BundesligaSpider(scrapy.Spider):
         shirt_num = response.xpath('//body//div[@class="main"]//header//div[@class="shirtNumberBox"]/text()').get()
         image_url = image_url[image_url.find('https'):-2]
         player['name'] = (str(f_name or "") + " " + str(l_name or "")).lstrip()
-        player['code'] = "p{}".format(base_code + int(shirt_num or 0))
+        player['code'] = "p{}".format(base_code + int(shirt_num or self.player_counter % 100))
         # print("{}-parse player {} ...".format(self.player_counter, player['name']))
         yield ImageItem(image_name=player['code'], image_url=image_url)
         if self.player_counter == 536:
