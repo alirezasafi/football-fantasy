@@ -14,7 +14,6 @@ from config import db
 
 crawl_runner = CrawlerRunner()
 crochet.setup()
-data = []
 
 
 @scrap_api.route('/<int:competition_id>')
@@ -29,8 +28,7 @@ class ScrapImage(Resource):
         527 players have image.
         There are 18 clubs and 536 player in site "https://www.bundesliga.com" that
         507 players have image.
-        Use this endpoint first to download the images, after that you sure all
-        the images have been downloaded use it again to update database.
+        Use this endpoint to download images.
         """
 
         comp_detail = {2021: {'spider': PremiesLeagueSpider, 'img_path': 'premier_league/'},
@@ -51,44 +49,42 @@ class ScrapImage(Resource):
         for club in clubs:
             database_stats['players'] += club.players.count()
 
-        global data
-        if len(data) == 0:
-            scrape_with_crochet(spider=comp_detail[competition_id].get("spider"), data=data)
-            return {"message": "start {} scrape.".format(competition.name)}, 200
+        data = []
+        scrape_with_crochet(spider=comp_detail[competition_id].get("spider"), data=data)
+        while True:
+            if len(data) > 0:
+                if data[-1] == "$":
+                    break
+        scraped_data_stats['clubs'] = len(data) - 1
 
-        elif data[-1] == "$":
-            scraped_data_stats['clubs'] = len(data) - 1
-
-            for club_data in data[0:-1]:
-                scraped_data_stats['players'] += len(club_data['players'])
-                club = competition.clubs.filter(Club.name.contains(club_data['name'])).first()
+        for club_data in data[0:-1]:
+            scraped_data_stats['players'] += len(club_data['players'])
+            club = competition.clubs.filter(Club.name.contains(club_data['name'])).first()
+            if not club:
+                club = self.find_club(competition, club_data['name'])
                 if not club:
-                    club = self.find_club(competition, club_data['name'])
-                    if not club:
-                        for player_data in club_data['players']:
-                            not_found_players.append(player_data)
-                        continue
-                for player_data in club_data['players']:
-                    if player_data['code'] is None:
-                        path = "default"
-                    else:
-                        path = comp_detail[competition_id].get('img_path') + player_data['code']
-                    player = club.players.filter(Player.name.contains(player_data['name'])).first()
+                    for player_data in club_data['players']:
+                        not_found_players.append(player_data)
+                    continue
+            for player_data in club_data['players']:
+                if player_data['code'] is None:
+                    path = "default"
+                else:
+                    path = comp_detail[competition_id].get('img_path') + player_data['code']
+                player = club.players.filter(Player.name.contains(player_data['name'])).first()
+                if not player:
+                    player = self.find_player(club, player_data['name'])
                     if not player:
-                        player = self.find_player(club, player_data['name'])
-                        if not player:
-                            not_found_players.append(player_data)
-                            continue
+                        not_found_players.append(player_data)
+                        continue
 
-                    player.image = path
-            db.session.commit()
-            data.clear()
-            return {"message": "submitted image for {} players".format(
-                scraped_data_stats['players'] - len(not_found_players)),
-                    'scraped_data_stats': scraped_data_stats, 'database_stats': database_stats,
-                    'not_found_player_in_db': len(not_found_players)}, 200
-
-        return {"message": "{} scrape in progress.".format(competition.name)}, 200
+                player.image = path
+        db.session.commit()
+        data.clear()
+        return {"message": "submitted image for {} players".format(
+            scraped_data_stats['players'] - len(not_found_players)),
+                'scraped_data_stats': scraped_data_stats, 'database_stats': database_stats,
+                'not_found_player_in_db': len(not_found_players)}, 200
 
     def find_club(self, league, club_name):
         for name in club_name.split(' '):
