@@ -1,4 +1,5 @@
 import scrapy
+import os
 from scrap_images.spiders.items import Club, Player
 from scrap_images.items import ImageItem
 
@@ -15,8 +16,13 @@ class PremiesLeagueSpider(scrapy.Spider):
     name = "premier_league"
     image_url = "https://resources.premierleague.com/premierleague/photos/players/250x250/{}.png"
     main_domain = 'https://www.premierleague.com'
+    downloaded = False
 
     def start_requests(self):
+        if os.path.exists(self.custom_settings.get("IMAGES_STORE")):
+            if len(os.listdir(self.custom_settings.get("IMAGES_STORE"))) == 579:
+                self.downloaded = True
+
         clubs_url = self.main_domain + '/clubs'
         yield scrapy.Request(url=clubs_url, callback=self.parse_clubs)
 
@@ -42,7 +48,8 @@ class PremiesLeagueSpider(scrapy.Spider):
         if len(players_url) == len(players_code) == len(players_name):
             for i in range(len(players_name)):
                 club['players'].append(Player(name=players_name[i], code=players_code[i]))
-                yield scrapy.Request(url=self.main_domain + players_url[i], callback=self.parse_player)
+                if not self.downloaded:
+                    yield scrapy.Request(url=self.main_domain + players_url[i], callback=self.parse_player)
 
         if len(self.data) == self.clubs_number:
             self.data.append("$")

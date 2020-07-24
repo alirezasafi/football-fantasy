@@ -1,4 +1,5 @@
 import scrapy
+import os
 from slugify import slugify_de
 from scrap_images.spiders.items import Club, Player
 from scrap_images.items import ImageItem
@@ -16,8 +17,13 @@ class BundesligaSpider(scrapy.Spider):
     main_url = 'https://www.bundesliga.com'
     club_url = 'https://www.bundesliga.com/en/bundesliga/clubs/{}/squad'
     player_counter = 0
+    downloaded = False
 
     def start_requests(self):
+        if os.path.exists(self.custom_settings.get("IMAGES_STORE")):
+            if len(os.listdir(self.custom_settings.get("IMAGES_STORE"))) == 507:
+                self.downloaded = True
+
         clubs_url = self.main_url + '/en/bundesliga/clubs'
         yield scrapy.Request(url=clubs_url, callback=self.parse_clubs)
 
@@ -57,7 +63,9 @@ class BundesligaSpider(scrapy.Spider):
         player['name'] = (str(f_name or "") + " " + str(l_name or "")).lstrip()
         player['code'] = "p{}".format(base_code + int(shirt_num or self.player_counter % 100))
         # print("{}-parse player {} ...".format(self.player_counter, player['name']))
-        yield ImageItem(image_name=player['code'], image_url=image_url)
+        if not self.downloaded:
+            yield ImageItem(image_name=player['code'], image_url=image_url)
+
         if self.player_counter == 536:
             self.data.append("$")
             print("download is complete.")

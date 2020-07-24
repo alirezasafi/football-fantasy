@@ -1,5 +1,6 @@
 import scrapy
 import json
+import os
 from scrap_images.spiders.items import Club, Player
 from scrap_images.items import ImageItem
 
@@ -16,7 +17,13 @@ class LaligSpider(scrapy.Spider):
     main_domain = 'https://www.laliga.com'
     clubs_number = 0
     players_stats = {'have_image': 0, 'not_have_image': 0}
+    downloaded = False
+
     def start_requests(self):
+        if os.path.exists(self.custom_settings.get("IMAGES_STORE")):
+            if len(os.listdir(self.custom_settings.get("IMAGES_STORE"))) == 527:
+                self.downloaded = True
+
         clubs_url = self.main_domain + '/laliga-santander/clubes'
         yield scrapy.Request(url=clubs_url, callback=self.parse_clubs)
 
@@ -49,7 +56,8 @@ class LaligSpider(scrapy.Spider):
                 code = player.get("opta_id")
                 self.players_stats['have_image'] += 1
                 club['players'].append(Player(name=name, code=code))
-                yield ImageItem(image_name=name, image_url=url)
+                if not self.downloaded:
+                    yield ImageItem(image_name=name, image_url=url)
 
         if len(self.data) == self.clubs_number:
             self.data.append("$")
