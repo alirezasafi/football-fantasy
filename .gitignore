@@ -1,0 +1,11 @@
+/venv
+__pycache__/
+.vscode/
+migrations/
+.idea/
+postgresData/
+Testcase.pyc
+config.pyc
+media/premier_league/
+media/laliga/
+media/bundesliga/

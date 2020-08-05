@@ -1,0 +1,39 @@
+version: '3'
+services:
+    web:
+        build: .
+        command: gunicorn --bind unix:/tmp/gunicorn.sock --workers 3 manage:app --timeout 3600
+        restart: always
+        expose:
+            - 5000
+        links:
+            - postgres:postgres
+        volumes:
+        - ./gunicorn_socket:/tmp
+        - ./media:/app/media
+    postgres:
+        restart: always
+        env_file: env.env          
+        image: postgres:latest
+        volumes:
+        - ./postgresData/:/var/lib/postgresql/data
+        ports:
+        - "5432:5432"
+        
+    broker:
+        image: rabbitmq:3
+        env_file: env.env
+        ports:
+            - 5672:5672
+    
+    celery:
+        build: .
+        command: celery -A router.celery worker --loglevel=info
+        depends_on:
+            - broker
+
+    celery-beat:
+        build: .
+        command: celery -A router.celery beat --loglevel=info
+        depends_on:
+            - broker
