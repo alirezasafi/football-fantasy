@@ -2,23 +2,24 @@ version: '3'
 services:
     web:
         build: .
-        command: gunicorn --bind unix:/tmp/gunicorn.sock --workers 3 manage:app --timeout 3600
-        restart: always
-        expose:
-            - 5000
+        command: "bash docker-entrypoint.sh"
+        restart: unless-stopped
+        ports:
+            - 5000:5000
         links:
             - postgres:postgres
         volumes:
-        - ./gunicorn_socket:/tmp
-        - ./media:/app/media
+            - ./gunicorn_socket:/tmp
+            - ./media:/app/media
+
     postgres:
         restart: always
         env_file: env.env          
         image: postgres:latest
         volumes:
-        - ./postgresData/:/var/lib/postgresql/data
+            - postgres_data:/var/lib/postgresql/data
         ports:
-        - "5432:5432"
+            - "5432:5432"
         
     broker:
         image: rabbitmq:3
@@ -37,3 +38,6 @@ services:
         command: celery -A router.celery beat --loglevel=info
         depends_on:
             - broker
+
+volumes:
+    postgres_data:
