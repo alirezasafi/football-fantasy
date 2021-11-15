@@ -1,11 +1,15 @@
+import os
 from flask import Flask, cli
-from config import db, api, jwt, mail, ma
-from user.controllers import UserView, UserListView
-from auth.controllers import Login, Register, RegisterConfirmation, ResetPasswordConfirmation, ResetPassword
 from flask_cors import CORS
-from game_event.models import Event
 from celery import Celery
 from celery.schedules import crontab
+from config import db, api, jwt, mail, ma
+from flask_admin import Admin
+from flask_admin.contrib.sqla import ModelView
+
+from user.controllers import UserView, UserListView
+from auth.controllers import Login, Register, RegisterConfirmation, ResetPasswordConfirmation, ResetPassword
+from game_event.models import Event
 # from celery_scheduler.make_celery import make_celery
 
 # importing apis
@@ -36,14 +40,22 @@ from database_population.cards_update_controller import UpdateCards
 from statistics.controllers import PlayerStatistics, SquadStatistics
 from database_population.club_update_controller import UpdateClub
 from scrap_images.controllers import ScrapImage
-
 from database_population.match_event_update_controller import perform_update
 
-import os
-
+# import models
+from user.models import User
+from player.models import Player
+from area.models import Area
+from club.models import Club
+from match.models import Match
 
 app = Flask(__name__)
-
+admin = Admin(app)
+admin.add_view(ModelView(User, db.session))
+admin.add_view(ModelView(Area, db.session))
+admin.add_view(ModelView(Club, db.session))
+admin.add_view(ModelView(Match, db.session))
+admin.add_view(ModelView(Player, db.session))
 # initing api
 api.init_app(app)
 api.add_namespace(auth_api, path='/auth')
